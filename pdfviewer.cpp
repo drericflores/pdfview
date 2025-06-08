@@ -1,5 +1,5 @@
 #include "pdfviewer.h"
-#include <poppler.h>
+#include <poppler/glib/poppler.h>
 
 typedef struct {
     PopplerDocument *document;
@@ -213,8 +213,20 @@ static void render_pdf_page(PdfViewerState *state) {
 
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, (int)width, (int)height);
     cairo_t *cr = cairo_create(surface);
+
     cairo_scale(cr, state->scale, state->scale);
+
+    // 🔄 Apply dark mode inversion if enabled
+    if (state->dark_mode) {
+        cairo_save(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
+        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);  // Inversion base (white)
+        cairo_paint(cr);
+        cairo_restore(cr);
+    }
+
     poppler_page_render(page, cr);
+
     cairo_destroy(cr);
     g_object_unref(page);
 
