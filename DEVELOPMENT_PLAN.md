@@ -21,7 +21,7 @@ Plan revised: 14 October 2026
 | Saving | In place, through a temp file and atomic rename; Save As also available |
 | Editing scope | Annotations, form filling, page operations, merge/split |
 | Structure | Modular: one header + source file per feature under `src/features/`; a thin window shell; GTK-free `core/` layer |
-| Working location | Your computer at `/home/eric/development/cpp/pdfview/` (not yet linked to this chat; work so far is in the GitHub clone) |
+| Working location | Your computer at `/home/eric/development/cpp/efpdf/` (not linked to this chat; work is delivered through the GitHub repository `drericflores/efpdf`) |
 
 ## Phase 0 — Port and foundation (written, not yet compiled)
 
@@ -70,7 +70,7 @@ Known risks to check first:
 
 ## Phase 2 — Finish the rename
 
-- [ ] Rename the GitHub repository `pdfview` → `efpdf` (GitHub redirects the old URL); update the About dialog website
+- [x] Rename the GitHub repository `pdfview` → `efpdf` (GitHub redirects the old URL); About dialog website updated
 - [ ] Rename your local folder to match
 - [x] Source files and classes already use the new `efpdf` namespace and `MainWindow`
 - [ ] Add a `.desktop` file and icon so EFPDF appears in the app launcher
@@ -89,14 +89,16 @@ Known risks to check first:
 
 - [ ] Undo / redo for annotations, form edits and page operations
 - [ ] Choose annotation colors; edit an existing note's text
-- [ ] Drag-and-drop page reordering in the thumbnail sidebar
+- [x] Drag-and-drop page reordering in the thumbnail sidebar (written, unverified)
 - [ ] Select multiple pages for delete, rotate and extract
+- [x] Split into separate files, every N pages or by typed ranges (written, unverified)
 - [ ] Insert pages from another PDF
 - [ ] Optional: free-text and ink (freehand) annotations
 
 ## Phase 5 — Quality and release
 
-- [ ] Automated tests for `pdfedit` (page counts and order after each operation) using small fixture PDFs
+- [x] Unit tests for the library-free core (`make check`: page ranges, utilities)
+- [ ] Automated tests for `pdf_ops` (page counts and order after each operation) using small fixture PDFs
 - [ ] CI build on Ubuntu LTS with all three libraries
 - [ ] Packaging: `.deb`, and optionally Flatpak or AppImage
 - [ ] Tag `v1.0` once Phases 1–3 pass on a clean machine

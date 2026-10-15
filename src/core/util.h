@@ -17,4 +17,14 @@ void remove_file(const std::string &path);
 // The last component of a path.
 std::string base_name(const std::string &path);
 
+// `dir` + "/" + `name`, with separators handled by GLib.
+std::string join_path(const std::string &dir, const std::string &name);
+
+// True if something exists at `path`.
+bool file_exists(const std::string &path);
+
+// The file name without its directory and without a trailing ".pdf"
+// (case-insensitive): "/a/Report.PDF" -> "Report".
+std::string pdf_stem(const std::string &path);
+
 }  // namespace efpdf::util

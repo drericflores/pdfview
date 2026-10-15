@@ -5,6 +5,7 @@
 #include <qpdf/QPDFPageObjectHelper.hh>
 #include <qpdf/QPDFWriter.hh>
 
+#include <cstdio>
 #include <exception>
 #include <memory>
 
@@ -161,6 +162,59 @@ bool extract_range(const std::string &in, const std::string &out, int first,
         err = e.what();
         return false;
     }
+}
+
+bool split(const std::string &in, const std::vector<PageRange> &ranges,
+           const std::vector<std::string> &outputs, const std::string &password,
+           std::string &err) {
+    if (ranges.empty() || ranges.size() != outputs.size()) {
+        err = "Nothing to split.";
+        return false;
+    }
+
+    std::vector<std::string> temps;
+    auto cleanup = [&temps] {
+        for (const auto &t : temps) std::remove(t.c_str());
+    };
+
+    try {
+        QPDF source;
+        read_file(source, in, password);
+        QPDFPageDocumentHelper source_doc(source);
+        auto pages = source_doc.getAllPages();
+        for (const auto &r : ranges) {
+            if (r.first < 0 || r.last < r.first ||
+                static_cast<size_t>(r.last) >= pages.size()) {
+                err = "A page range is out of range.";
+                return false;
+            }
+        }
+
+        for (size_t i = 0; i < ranges.size(); ++i) {
+            QPDF result;
+            result.emptyPDF();
+            QPDFPageDocumentHelper result_doc(result);
+            for (int p = ranges[i].first; p <= ranges[i].last; ++p) {
+                result_doc.addPage(pages[p], false);
+            }
+            const std::string tmp = outputs[i] + ".efpdf-tmp";
+            temps.push_back(tmp);
+            write_file(result, tmp);
+        }
+    } catch (const std::exception &e) {
+        err = e.what();
+        cleanup();
+        return false;
+    }
+
+    for (size_t i = 0; i < outputs.size(); ++i) {
+        if (std::rename(temps[i].c_str(), outputs[i].c_str()) != 0) {
+            err = "Could not write " + outputs[i];
+            cleanup();
+            return false;
+        }
+    }
+    return true;
 }
 
 }  // namespace efpdf::pdf_ops

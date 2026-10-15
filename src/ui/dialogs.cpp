@@ -105,6 +105,19 @@ bool choose_save_pdf(Gtk::Window &parent, const Glib::ustring &title,
     return !result.empty();
 }
 
+bool choose_folder(Gtk::Window &parent, const Glib::ustring &title,
+                   std::string &result) {
+    Gtk::FileChooserDialog dlg(title, Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+    dlg.set_transient_for(parent);
+    dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+    dlg.add_button("_Select", Gtk::RESPONSE_ACCEPT);
+    apply_start_folder(dlg);
+    if (dlg.run() != Gtk::RESPONSE_ACCEPT) return false;
+    result = dlg.get_filename();
+    if (!result.empty() && g_hooks.used) g_hooks.used(result);  // the folder itself
+    return !result.empty();
+}
+
 bool prompt_text(Gtk::Window &parent, const Glib::ustring &title,
                  const Glib::ustring &label, std::string &value, bool multiline,
                  bool secret) {

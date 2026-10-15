@@ -1,4 +1,4 @@
-// merge_split.h - Edit > Extract Pages... and Merge PDFs...
+// merge_split.h - Edit > Extract Pages..., Split into Files... and Merge PDFs...
 #pragma once
 
 #include "features/feature.h"
@@ -13,6 +13,7 @@ public:
 
 private:
     void extract_pages();
+    void split_files();
     void merge();
 
     AppContext &ctx_;

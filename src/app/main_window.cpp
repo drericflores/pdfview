@@ -39,12 +39,14 @@ MainWindow::MainWindow()
     features_.push_back(std::make_unique<RecentFiles>(ctx_, *files_));
     features_.push_back(std::make_unique<Navigation>(ctx_));
     features_.push_back(std::make_unique<Zoom>(ctx_));
-    features_.push_back(std::make_unique<Thumbnails>(ctx_));
     features_.push_back(std::make_unique<Search>(ctx_));
     features_.push_back(std::make_unique<Forms>(ctx_));        // registers the default tool
     features_.push_back(std::make_unique<Annotations>(ctx_));
     features_.push_back(std::make_unique<EditCommands>(ctx_));  // top of the Edit menu
-    features_.push_back(std::make_unique<PageOps>(ctx_));
+    auto page_ops = std::make_unique<PageOps>(ctx_);
+    PageOps *pages = page_ops.get();
+    features_.push_back(std::move(page_ops));
+    features_.push_back(std::make_unique<Thumbnails>(ctx_, *pages));  // drag to reorder
     features_.push_back(std::make_unique<MergeSplit>(ctx_, *files_));
     features_.push_back(std::make_unique<Preferences>(ctx_));   // end of the Edit menu
     features_.push_back(std::make_unique<DarkMode>(ctx_));

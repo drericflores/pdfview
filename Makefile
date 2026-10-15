@@ -103,6 +103,24 @@ uninstall:
 	  update-desktop-database -q $(PREFIX)/share/applications 2>/dev/null || true; \
 	fi
 
+# Unit tests for the library-free core code. `make check` needs only a C++17
+# compiler and GLib; it does not need GTKmm, Poppler or QPDF.
+GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0 2>/dev/null)
+GLIB_LIBS   := $(shell pkg-config --libs glib-2.0 2>/dev/null)
+TEST_FLAGS  := -std=c++17 -Wall -Wextra -Isrc
+
+check: build/test_page_ranges build/test_util
+	./build/test_page_ranges
+	./build/test_util
+
+build/test_page_ranges: tests/test_page_ranges.cpp src/core/page_ranges.cpp
+	@mkdir -p build
+	$(CXX) $(TEST_FLAGS) $^ -o $@
+
+build/test_util: tests/test_util.cpp src/core/util.cpp
+	@mkdir -p build
+	$(CXX) $(TEST_FLAGS) $(GLIB_CFLAGS) $^ -o $@ $(GLIB_LIBS)
+
 -include $(DEP)
 
-.PHONY: all clean run install uninstall check-install FORCE
+.PHONY: all clean run install uninstall check check-install FORCE

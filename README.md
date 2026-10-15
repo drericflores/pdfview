@@ -2,8 +2,8 @@
 
 efpdf is a native Linux PDF viewer and editor written in C++17. It is built with
 the GTKmm 3 toolkit, the Poppler-GLib rendering library and the QPDF library.
-(The project was previously named *PdfView*; the GitHub repository is still
-called `pdfview`.)
+(The project was previously named *PdfView*; the GitHub repository was renamed
+from `pdfview` to `efpdf`, and the old address redirects.)
 
 ## Note:  I had some bugs and resorted to Claude Code to help me analyze and fix the bugs.
 
@@ -29,8 +29,9 @@ This project is coded for educational purposes.
 - **Annotations:** highlight, underline and sticky notes; right-click an
   annotation to delete it
 - **Forms:** fill text fields, check boxes, radio buttons and drop-down choices
-- **Pages:** rotate, delete and move pages
-- **Merge and split:** merge several PDFs into one; extract a page range to a new file
+- **Pages:** rotate, delete and move pages; drag a thumbnail onto another to reorder
+- **Merge and split:** merge several PDFs into one; extract a page range to a new file;
+  split a document into separate files (every N pages, or the page ranges you type)
 - **Saving:** Save writes back to the opened file (through a temporary file and
   an atomic rename, so a failed write cannot destroy the original); Save As
   writes a new file. Edits stay in memory until you save, and EFPDF asks before
@@ -49,7 +50,8 @@ src/
   app/main_window.*        window shell: owns shared objects, builds each feature
   core/                    no GTK widgets; reusable on its own
     document_model.*         open document, current page, unsaved flag, signals
-    pdf_ops.*                rotate / delete / move / merge / extract (QPDF)
+    pdf_ops.*                rotate / delete / move / merge / extract / split (QPDF)
+    page_ranges.*            page-range parsing and split plans (no libraries)
     history.*                undo/redo stack for document edits
     settings.*               ~/.config/efpdf/settings.ini
     util.*, gobject_ptr.h    temp files, URIs, RAII for Poppler objects
@@ -72,7 +74,7 @@ src/
     forms.*                  fill form fields
     edit_commands.*          Edit > undo, redo, cut, copy, paste
     page_ops.*               rotate, delete, move pages
-    merge_split.*            merge PDFs, extract a page range
+    merge_split.*            merge PDFs, extract a page range, split into files
     tool_selector.*          toolbar drop-down for the active tool
     about.*                  Help > About
   resources/               application icon (efpdf2.png) and launcher template
@@ -109,6 +111,13 @@ Then build and run:
 ```bash
 make
 ./efpdf [file.pdf]
+```
+
+Run the unit tests for the library-free core code (needs only a C++17 compiler
+and GLib):
+
+```bash
+make check
 ```
 
 To install system-wide (default prefix `/usr/local`):
@@ -163,6 +172,12 @@ instructions under the toolbar always tells you what the active tool does.
 - **Highlight / Underline:** press, drag across the text, then release.
 - **Note:** click where the note should go, then type its text.
 - **Delete an annotation:** right-click it.
+- **Reorder pages:** drag a thumbnail in the sidebar and drop it on the page
+  whose position it should take. The moved page becomes the current page.
+- **Split into files:** Edit > Split into Files... Choose "every N pages" (1 makes
+  one file per page) or type ranges such as `1-3, 4, 7-9`, pick a folder, and
+  confirm. Files are named after the document, for example `report_p001-003.pdf`.
+  Nothing is written unless every file can be created, and the original is untouched.
 
 Edits stay in memory (the title shows `*`) until you press Ctrl+S.
 
@@ -173,7 +188,7 @@ program logs each tool selection and annotation it creates.
 
 By: Dr. Eric Oliver Flores Toro  
 Anatolica Consulting, LLC  
-October 2026 (version 0.2.0)
+October 2026 (version 0.3.0)
 
 ## License
 
