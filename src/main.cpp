@@ -7,6 +7,7 @@
 
 #include "app/main_window.h"
 #include "core/version.h"
+#include "ui/app_icon.h"
 
 int main(int argc, char *argv[]) {
     if (argc > 1 && std::strcmp(argv[1], "--version") == 0) {
@@ -15,6 +16,8 @@ int main(int argc, char *argv[]) {
     }
     g_message("efpdf %s (%s) starting", efpdf::kRelease, efpdf::version());
     auto app = Gtk::Application::create(argc, argv, "io.github.drericflores.efpdf");
+
+    efpdf::ui::install_app_icon();
 
     efpdf::MainWindow window;
     // efpdf [file.pdf]. Anything that looks like an option is ignored.

@@ -50,11 +50,43 @@ clean:
 run: all
 	./$(TARGET)
 
+# --- installation ---------------------------------------------------------
+# `sudo make install` installs system-wide; `make install PREFIX=$$HOME/.local`
+# installs for the current user only (no sudo). Both add the program, the
+# application icon and a launcher, so EFPDF appears in the GNOME menu.
+ICON_SRC  := resources/efpdf2.png
+DESKTOP   := io.github.drericflores.efpdf.desktop
+# Pick the hicolor size directory that matches the PNG.
+ICON_PX   := $(shell file $(ICON_SRC) 2>/dev/null | sed -n 's/.*PNG image data, \([0-9]*\) x.*/\1/p')
+ICON_DIM  := $(shell px=$(or $(ICON_PX),256); \
+               if [ $$px -ge 512 ]; then echo 512; elif [ $$px -ge 256 ]; then echo 256; \
+               elif [ $$px -ge 128 ]; then echo 128; elif [ $$px -ge 64 ]; then echo 64; \
+               else echo 48; fi)
+
 install: all
 	install -Dm755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	@if [ -f $(ICON_SRC) ]; then \
+	  install -Dm644 $(ICON_SRC) $(DESTDIR)$(PREFIX)/share/icons/hicolor/$(ICON_DIM)x$(ICON_DIM)/apps/efpdf.png; \
+	  install -Dm644 $(ICON_SRC) $(DESTDIR)$(PREFIX)/share/efpdf/efpdf2.png; \
+	else echo "warning: $(ICON_SRC) not found; installing without an icon"; fi
+	@mkdir -p $(DESTDIR)$(PREFIX)/share/applications
+	sed 's|@BINDIR@|$(PREFIX)/bin|' resources/efpdf.desktop.in > $(DESTDIR)$(PREFIX)/share/applications/$(DESKTOP)
+	@chmod 644 $(DESTDIR)$(PREFIX)/share/applications/$(DESKTOP)
+	@if [ -z "$(DESTDIR)" ]; then \
+	  gtk-update-icon-cache -q -t -f $(PREFIX)/share/icons/hicolor 2>/dev/null || true; \
+	  update-desktop-database -q $(PREFIX)/share/applications 2>/dev/null || true; \
+	fi
+	@echo "Installed EFPDF to $(PREFIX). If the menu entry or icon is missing, log out and back in."
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/$(DESKTOP)
+	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/*/apps/efpdf.png
+	rm -rf $(DESTDIR)$(PREFIX)/share/efpdf
+	@if [ -z "$(DESTDIR)" ]; then \
+	  gtk-update-icon-cache -q -t -f $(PREFIX)/share/icons/hicolor 2>/dev/null || true; \
+	  update-desktop-database -q $(PREFIX)/share/applications 2>/dev/null || true; \
+	fi
 
 -include $(DEP)
 

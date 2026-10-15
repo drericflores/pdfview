@@ -75,6 +75,7 @@ src/
     merge_split.*            merge PDFs, extract a page range
     tool_selector.*          toolbar drop-down for the active tool
     about.*                  Help > About
+  resources/               application icon (efpdf2.png) and launcher template
 ```
 
 Poppler can render, annotate and fill forms but cannot restructure a document,
@@ -115,6 +116,18 @@ To install system-wide (default prefix `/usr/local`):
 ```bash
 sudo make install
 ```
+
+or just for your own account, without sudo:
+
+```bash
+make install PREFIX=$HOME/.local
+```
+
+Installing adds the program, the application icon (`resources/efpdf2.png`) and a
+launcher, so EFPDF shows up in the GNOME applications menu with its icon. Log out
+and back in if the menu entry does not appear at once. `make uninstall` removes
+it all. When run straight from the source folder, EFPDF finds the icon in
+`resources/` next to the program.
 
 ## Keyboard shortcuts
 

@@ -1,6 +1,7 @@
 #include "features/about.h"
 
 #include "core/version.h"
+#include "ui/app_icon.h"
 #include "ui/menu_builder.h"
 
 namespace efpdf {

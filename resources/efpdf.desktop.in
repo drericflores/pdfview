@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=EFPDF
+GenericName=PDF Viewer and Editor
+Comment=EFPDF - Easy & Flexible PDF: view, annotate, fill and rearrange PDF files
+Exec=@BINDIR@/efpdf %f
+Icon=efpdf
+Terminal=false
+Categories=Office;Viewer;GTK;
+MimeType=application/pdf;
+Keywords=PDF;viewer;editor;annotate;forms;
+# Lets the desktop match the running window to this launcher (X11).
+StartupWMClass=efpdf
+StartupNotify=true
