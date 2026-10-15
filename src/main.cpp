@@ -9,10 +9,10 @@
 
 int main(int argc, char *argv[]) {
     if (argc > 1 && std::strcmp(argv[1], "--version") == 0) {
-        std::printf("efpdf %s\n", efpdf::version());
+        std::printf("efpdf %s (%s)\n", efpdf::kRelease, efpdf::version());
         return 0;
     }
-    g_message("efpdf %s starting", efpdf::version());
+    g_message("efpdf %s (%s) starting", efpdf::kRelease, efpdf::version());
     auto app = Gtk::Application::create(argc, argv, "io.github.drericflores.efpdf");
 
     efpdf::MainWindow window;

@@ -91,12 +91,12 @@ void MainWindow::on_hide() {
 
 void MainWindow::update_title() {
     if (!model_.is_open()) {
-        set_title("EFPDF");
+        set_title("efpdf (Easy & Flexible PDF)");
         return;
     }
     set_title(std::string(model_.dirty() ? "*" : "") + util::base_name(model_.path()) +
               " - Page " + std::to_string(model_.current_page() + 1) + " of " +
-              std::to_string(model_.page_count()) + " - EFPDF");
+              std::to_string(model_.page_count()) + " - efpdf");
 }
 
 }  // namespace efpdf
