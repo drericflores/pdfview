@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 #include "app/main_window.h"
 #include "core/version.h"
@@ -16,7 +17,15 @@ int main(int argc, char *argv[]) {
     auto app = Gtk::Application::create(argc, argv, "io.github.drericflores.efpdf");
 
     efpdf::MainWindow window;
-    if (argc > 1) window.open_file(argv[1]);  // efpdf file.pdf
+    // efpdf [file.pdf]. Anything that looks like an option is ignored.
+    std::string file;
+    for (int i = 1; i < argc; ++i) {
+        if (argv[i][0] != '-') {
+            file = argv[i];
+            break;
+        }
+    }
+    window.open_startup_file(file);
 
     // The file argument was handled above; keep it away from GApplication.
     return app->run(window, 1, argv);

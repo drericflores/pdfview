@@ -9,6 +9,7 @@
 #include "features/merge_split.h"
 #include "features/navigation.h"
 #include "features/page_ops.h"
+#include "features/preferences.h"
 #include "features/recent_files.h"
 #include "features/search.h"
 #include "features/thumbnails.h"
@@ -45,6 +46,7 @@ MainWindow::MainWindow()
     features_.push_back(std::make_unique<EditCommands>(ctx_));  // top of the Edit menu
     features_.push_back(std::make_unique<PageOps>(ctx_));
     features_.push_back(std::make_unique<MergeSplit>(ctx_, *files_));
+    features_.push_back(std::make_unique<Preferences>(ctx_));   // end of the Edit menu
     features_.push_back(std::make_unique<DarkMode>(ctx_));
     features_.push_back(std::make_unique<ToolSelector>(ctx_));  // after all tools exist
     features_.push_back(std::make_unique<About>(ctx_));
@@ -76,6 +78,24 @@ bool MainWindow::open_file(const std::string &path) { return files_->open_path(p
 bool MainWindow::on_delete_event(GdkEventAny *event) {
     if (!files_->confirm_discard()) return true;  // keep the window open
     return Gtk::Window::on_delete_event(event);
+}
+
+void MainWindow::open_startup_file(const std::string &arg) {
+    std::string path = arg;
+    if (path.empty() && settings_.get_bool("general", "reopen_last", false)) {
+        const auto recent = settings_.get_list("recent", "files");
+        if (!recent.empty() && Glib::file_test(recent.front(), Glib::FILE_TEST_EXISTS)) {
+            path = recent.front();
+        }
+    }
+    if (path.empty()) return;
+
+    if (!Glib::file_test(path, Glib::FILE_TEST_EXISTS)) {
+        g_warning("efpdf: no such file: %s", path.c_str());
+        view_.signal_message.emit("File not found: " + path);
+        return;
+    }
+    files_->open_path(path);
 }
 
 void MainWindow::on_hide() {

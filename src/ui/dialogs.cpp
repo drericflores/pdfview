@@ -12,7 +12,21 @@ Glib::RefPtr<Gtk::FileFilter> pdf_filter() {
     return filter;
 }
 
+FolderHooks g_hooks;
+
+void apply_start_folder(Gtk::FileChooserDialog &dlg) {
+    if (!g_hooks.start) return;
+    const std::string folder = g_hooks.start();
+    if (!folder.empty()) dlg.set_current_folder(folder);
+}
+
+void note_folder_used(const std::string &file) {
+    if (g_hooks.used && !file.empty()) g_hooks.used(Glib::path_get_dirname(file));
+}
+
 }  // namespace
+
+void set_folder_hooks(FolderHooks hooks) { g_hooks = std::move(hooks); }
 
 void show_error(Gtk::Window &parent, const Glib::ustring &message) {
     Gtk::MessageDialog dlg(parent, message, false, Gtk::MESSAGE_ERROR,
@@ -53,8 +67,10 @@ bool choose_open_pdf(Gtk::Window &parent, const Glib::ustring &title,
     dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
     dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
     dlg.add_filter(pdf_filter());
+    apply_start_folder(dlg);
     if (dlg.run() != Gtk::RESPONSE_ACCEPT) return false;
     result = dlg.get_filename();
+    note_folder_used(result);
     return !result.empty();
 }
 
@@ -66,8 +82,10 @@ bool choose_open_pdfs(Gtk::Window &parent, const Glib::ustring &title,
     dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
     dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
     dlg.add_filter(pdf_filter());
+    apply_start_folder(dlg);
     if (dlg.run() != Gtk::RESPONSE_ACCEPT) return false;
     result = dlg.get_filenames();
+    if (!result.empty()) note_folder_used(result.front());
     return !result.empty();
 }
 
@@ -79,9 +97,11 @@ bool choose_save_pdf(Gtk::Window &parent, const Glib::ustring &title,
     dlg.add_button("_Save", Gtk::RESPONSE_ACCEPT);
     dlg.add_filter(pdf_filter());
     dlg.set_do_overwrite_confirmation(true);
+    apply_start_folder(dlg);
     if (!suggested_name.empty()) dlg.set_current_name(suggested_name);
     if (dlg.run() != Gtk::RESPONSE_ACCEPT) return false;
     result = dlg.get_filename();
+    note_folder_used(result);
     return !result.empty();
 }
 

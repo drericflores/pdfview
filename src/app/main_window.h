@@ -32,6 +32,10 @@ public:
     // Opens `path` (as if chosen from File > Open). Returns false on failure.
     bool open_file(const std::string &path);
 
+    // Called once at start-up with the command-line file (may be empty). Never
+    // shows an error dialog for a missing file; says so on the status line.
+    void open_startup_file(const std::string &arg);
+
 protected:
     bool on_delete_event(GdkEventAny *event) override;
     void on_hide() override;

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core/document_model.h"
+#include "core/settings.h"
 #include "ui/dialogs.h"
 #include "view/page_view.h"
 #include "view/tool_registry.h"
@@ -30,6 +31,17 @@ void report_added(PageView &view, const char *what, PopplerPage *page) {
     g_message("efpdf: %s added; the page now holds %u annotation(s)", what, n);
     view.signal_message.emit(Glib::ustring(what) + " added. Save (Ctrl+S) to keep it. " +
                              "Right-click an annotation to delete it.");
+}
+
+// Colour chosen in Preferences (stored as "#rrggbb"), or `fallback`.
+PopplerColor annotation_color(Settings &settings, const char *key, const char *fallback) {
+    Gdk::RGBA rgba;
+    if (!rgba.set(settings.get_string("annotations", key, fallback))) rgba.set(fallback);
+    PopplerColor color;
+    color.red = static_cast<guint16>(rgba.get_red() * 65535.0 + 0.5);
+    color.green = static_cast<guint16>(rgba.get_green() * 65535.0 + 0.5);
+    color.blue = static_cast<guint16>(rgba.get_blue() * 65535.0 + 0.5);
+    return color;
 }
 
 }  // namespace
@@ -112,8 +124,8 @@ void MarkupTool::add_annotation(PageView &view) {
         return;
     }
 
-    PopplerColor color = underline_ ? PopplerColor{0xffff, 0x0000, 0x0000}
-                                    : PopplerColor{0xffff, 0xffff, 0x0000};
+    PopplerColor color = underline_ ? annotation_color(ctx_.settings, "underline_color", "#ff0000")
+                                    : annotation_color(ctx_.settings, "highlight_color", "#ffff00");
     poppler_annot_set_color(annot, &color);
     poppler_page_add_annot(page.get(), annot);
     g_object_unref(annot);
@@ -144,7 +156,7 @@ bool NoteTool::on_press(PageView &view, const PointerEvent &event) {
         return true;
     }
     poppler_annot_set_contents(annot, text.c_str());
-    PopplerColor color{0xffff, 0xffff, 0x0000};
+    PopplerColor color = annotation_color(ctx_.settings, "note_color", "#ffff00");
     poppler_annot_set_color(annot, &color);
     poppler_page_add_annot(page.get(), annot);
     g_object_unref(annot);

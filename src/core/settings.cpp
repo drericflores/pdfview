@@ -40,6 +40,15 @@ bool Settings::get_bool(const char *group, const char *key, bool fallback) const
     return fallback;
 }
 
+std::string Settings::get_string(const char *group, const char *key,
+                                 const std::string &fallback) const {
+    try {
+        if (keyfile_.has_key(group, key)) return keyfile_.get_string(group, key);
+    } catch (const Glib::Error &) {
+    }
+    return fallback;
+}
+
 std::vector<std::string> Settings::get_list(const char *group, const char *key) const {
     std::vector<std::string> result;
     try {
@@ -55,20 +64,29 @@ std::vector<std::string> Settings::get_list(const char *group, const char *key) 
 
 void Settings::set_int(const char *group, const char *key, int value) {
     keyfile_.set_integer(group, key, value);
+    signal_changed.emit(group, key);
 }
 
 void Settings::set_double(const char *group, const char *key, double value) {
     keyfile_.set_double(group, key, value);
+    signal_changed.emit(group, key);
 }
 
 void Settings::set_bool(const char *group, const char *key, bool value) {
     keyfile_.set_boolean(group, key, value);
+    signal_changed.emit(group, key);
 }
 
 void Settings::set_list(const char *group, const char *key,
                         const std::vector<std::string> &values) {
     std::vector<Glib::ustring> items(values.begin(), values.end());
     keyfile_.set_string_list(group, key, items);
+    signal_changed.emit(group, key);
+}
+
+void Settings::set_string(const char *group, const char *key, const std::string &value) {
+    keyfile_.set_string(group, key, value);
+    signal_changed.emit(group, key);
 }
 
 void Settings::save() {

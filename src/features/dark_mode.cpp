@@ -38,6 +38,13 @@ DarkMode::DarkMode(AppContext &ctx) : ctx_(ctx) {
                                      Gdk::CONTROL_MASK);
     // Restoring the saved choice toggles the item, which calls apply().
     if (ctx.settings.get_bool("view", "dark", false)) item_->set_active(true);
+
+    // Preferences can flip it while the program is running.
+    ctx.settings.signal_changed.connect([this](const std::string &group, const std::string &key) {
+        if (group != "view" || key != "dark") return;
+        const bool wanted = ctx_.settings.get_bool("view", "dark", false);
+        if (item_->get_active() != wanted) item_->set_active(wanted);
+    });
 }
 
 DarkMode::~DarkMode() {
