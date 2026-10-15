@@ -7,7 +7,6 @@
 
 #include <exception>
 #include <memory>
-#include <numeric>
 
 namespace efpdf::pdf_ops {
 namespace {
@@ -84,13 +83,20 @@ bool move_page(const std::string &in, const std::string &out, int from, int to,
             return false;
         }
 
-        std::vector<int> order(pages.size());
-        std::iota(order.begin(), order.end(), 0);
-        order.erase(order.begin() + from);
-        order.insert(order.begin() + to, from);
-
-        for (auto &p : pages) doc.removePage(p);
-        for (int idx : order) doc.addPage(pages[idx], false);
+        // Remove only the moving page and re-insert it next to its new
+        // neighbour. (Removing and re-adding every page rebuilds the /Pages
+        // array once per page, which is O(n^2) on large documents.)
+        if (from != to) {
+            QPDFPageObjectHelper moving = pages[from];
+            doc.removePage(moving);
+            if (to >= static_cast<int>(pages.size()) - 1) {
+                doc.addPage(moving, false);  // new position is the end
+            } else {
+                // Index `to` of the list without the moving page.
+                QPDFPageObjectHelper ref = pages[from < to ? to + 1 : to];
+                doc.addPageAt(moving, true, ref);
+            }
+        }
         write_file(pdf, out);
         return true;
     } catch (const std::exception &e) {
