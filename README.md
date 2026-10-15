@@ -5,7 +5,7 @@ the GTKmm 3 toolkit, the Poppler-GLib rendering library and the QPDF library.
 (The project was previously named *PdfView*; the GitHub repository is still
 called `pdfview`.)
 
-# Note:  I had some bugs and resorted to Claude Code to help me analyze and fix the bugs.
+## Note:  I had some bugs and resorted to Claude Code to help me analyze and fix the bugs.
 
 This project is coded for educational purposes.
 
