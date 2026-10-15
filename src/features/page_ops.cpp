@@ -90,18 +90,22 @@ void PageOps::delete_current() {
         page);
 }
 
-void PageOps::move_current(int delta) {
+bool PageOps::move_page(int from, int to) {
     DocumentModel &model = ctx_.model;
-    if (!model.is_open()) return;
-    const int from = model.current_page();
-    const int to = from + delta;
-    if (to < 0 || to >= model.page_count()) return;
-    run(ctx_,
-        [from, to](const std::string &in, const std::string &out, const std::string &pw,
-                   std::string &err) {
-            return pdf_ops::move_page(in, out, from, to, pw, err);
-        },
-        to);
+    if (!model.is_open() || from == to) return false;
+    const int count = model.page_count();
+    if (from < 0 || to < 0 || from >= count || to >= count) return false;
+    return run(ctx_,
+               [from, to](const std::string &in, const std::string &out,
+                          const std::string &pw, std::string &err) {
+                   return pdf_ops::move_page(in, out, from, to, pw, err);
+               },
+               to);
+}
+
+void PageOps::move_current(int delta) {
+    const int from = ctx_.model.current_page();
+    move_page(from, from + delta);
 }
 
 }  // namespace efpdf

@@ -13,6 +13,11 @@ class PageOps : public Feature {
 public:
     explicit PageOps(AppContext &ctx);
 
+    // Moves the page at index `from` so it ends up at index `to` (0-based) and
+    // shows it there. Used by the menu and by drag-and-drop in the thumbnail
+    // sidebar. Returns false if nothing was moved.
+    bool move_page(int from, int to);
+
 private:
     void rotate(int degrees);
     void delete_current();

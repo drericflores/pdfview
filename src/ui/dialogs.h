@@ -23,6 +23,10 @@ bool choose_open_pdfs(Gtk::Window &parent, const Glib::ustring &title,
 bool choose_save_pdf(Gtk::Window &parent, const Glib::ustring &title,
                      std::string &result, const std::string &suggested_name);
 
+// Asks for an existing folder (the dialog can also create one).
+bool choose_folder(Gtk::Window &parent, const Glib::ustring &title,
+                   std::string &result);
+
 // Asks for a line (or, with `multiline`, a paragraph) of text. With `secret`
 // the entry hides what is typed, for passwords.
 bool prompt_text(Gtk::Window &parent, const Glib::ustring &title,

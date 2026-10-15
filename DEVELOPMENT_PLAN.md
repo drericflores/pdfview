@@ -89,14 +89,16 @@ Known risks to check first:
 
 - [ ] Undo / redo for annotations, form edits and page operations
 - [ ] Choose annotation colors; edit an existing note's text
-- [ ] Drag-and-drop page reordering in the thumbnail sidebar
+- [x] Drag-and-drop page reordering in the thumbnail sidebar (written, unverified)
 - [ ] Select multiple pages for delete, rotate and extract
+- [x] Split into separate files, every N pages or by typed ranges (written, unverified)
 - [ ] Insert pages from another PDF
 - [ ] Optional: free-text and ink (freehand) annotations
 
 ## Phase 5 — Quality and release
 
-- [ ] Automated tests for `pdfedit` (page counts and order after each operation) using small fixture PDFs
+- [x] Unit tests for the library-free core (`make check`: page ranges, utilities)
+- [ ] Automated tests for `pdf_ops` (page counts and order after each operation) using small fixture PDFs
 - [ ] CI build on Ubuntu LTS with all three libraries
 - [ ] Packaging: `.deb`, and optionally Flatpak or AppImage
 - [ ] Tag `v1.0` once Phases 1–3 pass on a clean machine

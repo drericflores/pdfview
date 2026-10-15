@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include "core/page_ranges.h"
+
 namespace efpdf::pdf_ops {
 
 bool rotate_page(const std::string &in, const std::string &out, int page,
@@ -29,5 +31,13 @@ bool merge(const std::vector<std::string> &inputs, const std::string &out,
 // Copies pages first..last (inclusive) of `in` into a new file.
 bool extract_range(const std::string &in, const std::string &out, int first,
                    int last, const std::string &password, std::string &err);
+
+// Writes one new file per range (outputs[i] receives ranges[i]), reading `in`
+// only once. All-or-nothing: every file is written under a temporary name
+// first, and only when all succeed are they renamed into place, so a failure
+// leaves existing files untouched. The outputs are unencrypted.
+bool split(const std::string &in, const std::vector<PageRange> &ranges,
+           const std::vector<std::string> &outputs, const std::string &password,
+           std::string &err);
 
 }  // namespace efpdf::pdf_ops
