@@ -23,7 +23,7 @@ void About::show() {
         "Anatolica Consulting, LLC\n"
         "October 2026");
     dlg.set_license_type(Gtk::LICENSE_MIT_X11);
-    dlg.set_website("https://github.com/drericflores/pdfview");
+    dlg.set_website("https://github.com/drericflores/efpdf");
     dlg.run();
 }
 

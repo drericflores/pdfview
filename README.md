@@ -2,8 +2,8 @@
 
 efpdf is a native Linux PDF viewer and editor written in C++17. It is built with
 the GTKmm 3 toolkit, the Poppler-GLib rendering library and the QPDF library.
-(The project was previously named *PdfView*; the GitHub repository is still
-called `pdfview`.)
+(The project was previously named *PdfView*; the GitHub repository was renamed
+from `pdfview` to `efpdf`, and the old address redirects.)
 
 ## Note:  I had some bugs and resorted to Claude Code to help me analyze and fix the bugs.
 
