@@ -76,7 +76,22 @@ install: all
 	  gtk-update-icon-cache -q -t -f $(PREFIX)/share/icons/hicolor 2>/dev/null || true; \
 	  update-desktop-database -q $(PREFIX)/share/applications 2>/dev/null || true; \
 	fi
-	@echo "Installed EFPDF to $(PREFIX). If the menu entry or icon is missing, log out and back in."
+	@$(MAKE) --no-print-directory check-install PREFIX=$(PREFIX)
+	@echo "If the menu entry or icon is missing, log out and back in once."
+
+# Reports what is installed under PREFIX (run automatically after install).
+check-install:
+	@echo "--- EFPDF install check (PREFIX=$(PREFIX)) ---"
+	@for f in bin/efpdf share/applications/$(DESKTOP) share/efpdf/efpdf2.png; do \
+	  if [ -e "$(PREFIX)/$$f" ]; then echo "  ok       $(PREFIX)/$$f"; else echo "  MISSING  $(PREFIX)/$$f"; fi; done
+	@ls $(PREFIX)/share/icons/hicolor/*/apps/efpdf.png 2>/dev/null | sed 's/^/  ok       /' || true
+	@if ! ls $(PREFIX)/share/icons/hicolor/*/apps/efpdf.png >/dev/null 2>&1; then \
+	  echo "  MISSING  icon in $(PREFIX)/share/icons/hicolor (is resources/efpdf2.png present?)"; fi
+	@if command -v desktop-file-validate >/dev/null 2>&1 && [ -e "$(PREFIX)/share/applications/$(DESKTOP)" ]; then \
+	  desktop-file-validate $(PREFIX)/share/applications/$(DESKTOP) && echo "  ok       launcher file is valid"; fi
+	@case ":$$XDG_DATA_DIRS:" in *":$(PREFIX)/share:"*) echo "  ok       $(PREFIX)/share is a desktop search folder";; \
+	  *) if [ "$(PREFIX)" = "$$HOME/.local" ]; then echo "  ok       ~/.local/share is always searched"; \
+	     else echo "  NOTE     $(PREFIX)/share is not in XDG_DATA_DIRS; the menu may not see it"; fi;; esac
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
@@ -90,4 +105,4 @@ uninstall:
 
 -include $(DEP)
 
-.PHONY: all clean run install uninstall FORCE
+.PHONY: all clean run install uninstall check-install FORCE
