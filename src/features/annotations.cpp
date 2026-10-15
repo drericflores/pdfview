@@ -17,6 +17,21 @@ bool inside(const PopplerRectangle &r, double x, double y) {
            y >= std::min(r.y1, r.y2) && y <= std::max(r.y1, r.y2);
 }
 
+// How many annotations Poppler now holds on the page (for feedback and logs).
+guint annotation_count(PopplerPage *page) {
+    GList *mappings = poppler_page_get_annot_mapping(page);
+    const guint n = g_list_length(mappings);
+    poppler_page_free_annot_mapping(mappings);
+    return n;
+}
+
+void report_added(PageView &view, const char *what, PopplerPage *page) {
+    const guint n = annotation_count(page);
+    g_message("efpdf: %s added; the page now holds %u annotation(s)", what, n);
+    view.signal_message.emit(Glib::ustring(what) + " added. Save (Ctrl+S) to keep it. " +
+                             "Right-click an annotation to delete it.");
+}
+
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -49,6 +64,7 @@ bool MarkupTool::on_release(PageView &view, const PointerEvent &event) {
     if (std::abs(x1_ - x0_) > 3 && std::abs(y1_ - y0_) > 3) {
         add_annotation(view);
     } else {
+        view.signal_message.emit("Nothing marked: press, drag across the text, then release.");
         view.area().queue_draw();
     }
     return true;
@@ -91,6 +107,7 @@ void MarkupTool::add_annotation(PageView &view) {
             : poppler_annot_text_markup_new_highlight(ctx_.model.poppler(), &rect, quads);
     g_array_free(quads, TRUE);
     if (!annot) {
+        g_warning("efpdf: poppler could not create the markup annotation");
         ui::show_error(ctx_.window, "Could not create the annotation.");
         return;
     }
@@ -100,6 +117,7 @@ void MarkupTool::add_annotation(PageView &view) {
     poppler_annot_set_color(annot, &color);
     poppler_page_add_annot(page.get(), annot);
     g_object_unref(annot);
+    report_added(view, underline_ ? "Underline" : "Highlight", page.get());
     ctx_.model.notify_modified();
 }
 
@@ -107,7 +125,7 @@ void MarkupTool::add_annotation(PageView &view) {
 // NoteTool
 // ---------------------------------------------------------------------------
 
-bool NoteTool::on_press(PageView &, const PointerEvent &event) {
+bool NoteTool::on_press(PageView &view, const PointerEvent &event) {
     PagePtr page = ctx_.model.current_page_object();
     if (!page) return false;
 
@@ -121,6 +139,7 @@ bool NoteTool::on_press(PageView &, const PointerEvent &event) {
                           event.pdf_y};
     PopplerAnnot *annot = poppler_annot_text_new(ctx_.model.poppler(), &rect);
     if (!annot) {
+        g_warning("efpdf: poppler could not create the note annotation");
         ui::show_error(ctx_.window, "Could not create the note.");
         return true;
     }
@@ -129,6 +148,7 @@ bool NoteTool::on_press(PageView &, const PointerEvent &event) {
     poppler_annot_set_color(annot, &color);
     poppler_page_add_annot(page.get(), annot);
     g_object_unref(annot);
+    report_added(view, "Note", page.get());
     ctx_.model.notify_modified();
     return true;
 }

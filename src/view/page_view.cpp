@@ -6,8 +6,10 @@
 namespace efpdf {
 
 PageView::PageView(DocumentModel &model) : model_(model) {
-    area_.set_halign(Gtk::ALIGN_CENTER);
-    area_.set_valign(Gtk::ALIGN_CENTER);
+    // The overlay is centred in the viewport and is exactly the page's size,
+    // so overlay coordinates equal drawing-area coordinates.
+    overlay_.set_halign(Gtk::ALIGN_CENTER);
+    overlay_.set_valign(Gtk::ALIGN_CENTER);
     area_.set_can_focus(true);
     area_.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
                      Gdk::BUTTON1_MOTION_MASK | Gdk::SCROLL_MASK);
@@ -20,7 +22,8 @@ PageView::PageView(DocumentModel &model) : model_(model) {
         sigc::mem_fun(*this, &PageView::on_area_release));
     area_.signal_scroll_event().connect(
         sigc::mem_fun(*this, &PageView::on_area_scroll));
-    add(area_);
+    overlay_.add(area_);
+    add(overlay_);
 
     model_.signal_loaded.connect(sigc::mem_fun(*this, &PageView::refresh));
     model_.signal_closed.connect(sigc::mem_fun(*this, &PageView::refresh));
@@ -125,6 +128,19 @@ void PageView::to_pdf(double sx, double sy, double &px, double &py) const {
 void PageView::from_pdf(double px, double py, double &sx, double &sy) const {
     sx = px * scale_;
     sy = (page_h_ - py) * scale_;
+}
+
+void PageView::place_over_pdf_rect(Gtk::Widget &widget, double x1, double y1,
+                                   double x2, double y2) {
+    double sx0, sy0, sx1, sy1;
+    from_pdf(std::min(x1, x2), std::max(y1, y2), sx0, sy0);  // top-left
+    from_pdf(std::max(x1, x2), std::min(y1, y2), sx1, sy1);  // bottom-right
+    widget.set_halign(Gtk::ALIGN_START);
+    widget.set_valign(Gtk::ALIGN_START);
+    widget.set_margin_start(static_cast<int>(sx0));
+    widget.set_margin_top(static_cast<int>(sy0));
+    widget.set_size_request(std::max(40, static_cast<int>(sx1 - sx0)),
+                            std::max(24, static_cast<int>(sy1 - sy0)));
 }
 
 void PageView::scroll_to_pdf_point(double px, double py) {

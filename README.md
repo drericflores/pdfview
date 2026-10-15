@@ -129,11 +129,20 @@ sudo make install
 
 ## Using the editing tools
 
-Pick a tool from the drop-down on the right of the toolbar:
+Pick a tool with the buttons on the right of the toolbar. A line of
+instructions under the toolbar always tells you what the active tool does.
 
-- **Select / Fill forms:** click a form field to edit it
-- **Highlight / Underline:** drag a rectangle over the text
-- **Add note:** click where the note should go, then type its text
+- **Fill forms:** click a form field and type directly into it. Enter keeps
+  the value, Esc cancels. Check boxes and radio buttons toggle on click, and
+  drop-downs open in place.
+- **Highlight / Underline:** press, drag across the text, then release.
+- **Note:** click where the note should go, then type its text.
+- **Delete an annotation:** right-click it.
+
+Edits stay in memory (the title shows `*`) until you press Ctrl+S.
+
+If something does not behave, run `./efpdf file.pdf 2>&1 | tee run.log`; the
+program logs each tool selection and annotation it creates.
 
 ## License
 

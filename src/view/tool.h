@@ -24,6 +24,9 @@ public:
     // Text shown in the tool selector.
     virtual Glib::ustring label() const = 0;
 
+    // One-line instruction shown to the user while the tool is active.
+    virtual Glib::ustring hint() const { return ""; }
+
     virtual bool on_press(PageView &, const PointerEvent &) { return false; }
     virtual bool on_motion(PageView &, const PointerEvent &) { return false; }
     virtual bool on_release(PageView &, const PointerEvent &) { return false; }

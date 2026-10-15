@@ -44,7 +44,16 @@ public:
 
     Gtk::DrawingArea &area() { return area_; }
 
+    // Widgets added with overlay().add_overlay() float above the page. Use
+    // place_over_pdf_rect() to line one up with a rectangle in PDF points
+    // (for example, a form field being edited in place).
+    Gtk::Overlay &overlay() { return overlay_; }
+    void place_over_pdf_rect(Gtk::Widget &widget, double x1, double y1, double x2,
+                             double y2);
+
     sigc::signal<void> signal_scale_changed;
+    // Short status messages from tools ("Highlight added"), shown to the user.
+    sigc::signal<void, const Glib::ustring &> signal_message;
     // Right mouse button; used by the annotation eraser.
     sigc::signal<void, const PointerEvent &> signal_secondary_click;
     // Lets features draw over the page (search highlights, for example).
@@ -60,6 +69,7 @@ private:
     bool measure();
 
     DocumentModel &model_;
+    Gtk::Overlay overlay_;
     Gtk::DrawingArea area_;
     Cairo::RefPtr<Cairo::ImageSurface> surface_;
     Tool *tool_ = nullptr;
