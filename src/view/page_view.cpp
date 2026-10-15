@@ -70,7 +70,8 @@ void PageView::set_tool(Tool *tool) {
 }
 
 void PageView::refresh() {
-    surface_.reset();
+    // Assigning an empty RefPtr works with both old and new cairomm.
+    surface_ = Cairo::RefPtr<Cairo::ImageSurface>();
     PagePtr page = model_.current_page_object();
     if (!page) {
         page_w_ = page_h_ = 0;
@@ -96,7 +97,8 @@ void PageView::refresh() {
 
     if (dark_) {
         // Invert the finished page: white paper becomes dark, black text light.
-        cr->set_operator(Cairo::OPERATOR_DIFFERENCE);
+        // cairomm's operator enum lacks the blend modes, so use the C API.
+        cairo_set_operator(cr->cobj(), CAIRO_OPERATOR_DIFFERENCE);
         cr->set_source_rgb(1.0, 1.0, 1.0);
         cr->paint();
     }
