@@ -15,8 +15,6 @@ private:
 
     AppContext &ctx_;
     Gtk::CheckMenuItem *item_ = nullptr;
-    Glib::RefPtr<Gtk::CssProvider> css_;
-    bool css_installed_ = false;
 };
 
 }  // namespace efpdf

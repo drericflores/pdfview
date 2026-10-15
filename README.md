@@ -21,7 +21,9 @@ This project is coded for educational purposes.
 - Text search across the whole document with highlighted matches (Ctrl+F)
 - Recent files list, drag-and-drop to open, and remembered window size, zoom
   level and dark mode
-- Dark mode (inverts the page and switches the GTK theme to its dark variant)
+- A colored, modern look: brand-colored menu bar, icon toolbar, accent-colored
+  active tool, card-style thumbnails and a framed page on a soft backdrop
+- Dark mode (inverts the page and recolors the whole window with a matching dark palette)
 - Window title shows the file name, the current page and an `*` for unsaved edits
 
 **Editing**
@@ -58,6 +60,7 @@ src/
   ui/
     dialogs.*                shared dialogs (errors, file choosers, prompts)
     menu_builder.*           lets features add their own menu entries
+    toolbar.*                icon + label toolbar buttons and separators
     text_undo.*              undo for typing inside an editor widget
   view/
     page_view.*              renders the page; forwards mouse input to the active tool
@@ -68,7 +71,8 @@ src/
     navigation.*             previous/next, page-jump box, page shortcuts
     thumbnails.*             thumbnail sidebar
     zoom.*                   zoom, fit width, fit page
-    dark_mode.*              dark mode
+    dark_mode.*              dark mode (the page and the GTK dark setting)
+    appearance.*             colors and styling (one stylesheet, light and dark palettes)
     search.*                 find bar and match highlighting
     annotations.*            highlight, underline, notes, right-click delete
     forms.*                  fill form fields
@@ -138,6 +142,14 @@ and back in if the menu entry does not appear at once. `make uninstall` removes
 it all. When run straight from the source folder, EFPDF finds the icon in
 `resources/` next to the program.
 
+## Changing the look
+
+All colors live in one place: the two palettes at the top of
+`src/features/appearance.cpp` (`@define-color efpdf_...` lines, one set for the
+light look and one for dark). Change a value there and rebuild to re-color the
+whole program. To compare with your system's plain theme, start the program
+with `EFPDF_PLAIN=1 ./efpdf`.
+
 ## Keyboard shortcuts
 
 | Shortcut | Action |
@@ -188,7 +200,7 @@ program logs each tool selection and annotation it creates.
 
 By: Dr. Eric Oliver Flores Toro  
 Anatolica Consulting, LLC  
-October 2026 (version 0.3.0)
+October 2026 (version 0.4.0)
 
 ## License
 

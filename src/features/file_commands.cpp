@@ -4,6 +4,7 @@
 #include "core/util.h"
 #include "ui/dialogs.h"
 #include "ui/menu_builder.h"
+#include "ui/toolbar.h"
 
 namespace efpdf {
 
@@ -20,13 +21,14 @@ FileCommands::FileCommands(AppContext &ctx) : ctx_(ctx) {
     menus.add_separator("_File");
     menus.add_item("_File", "_Quit", [this] { quit(); }, GDK_KEY_q, ctrl);
 
-    auto add_button = [&ctx](const char *label, const sigc::slot<void> &slot) {
-        auto *button = Gtk::manage(new Gtk::Button(label, true));
-        button->signal_clicked().connect(slot);
-        ctx.toolbar.pack_start(*button, Gtk::PACK_SHRINK);
-    };
-    add_button("_Open", sigc::mem_fun(*this, &FileCommands::on_open_dialog));
-    add_button("_Save", [this] { save(); });
+    ui::add_toolbar_button(ctx.toolbar, "_Open", "document-open-symbolic",
+                           "Open a PDF (Ctrl+O)",
+                           sigc::mem_fun(*this, &FileCommands::on_open_dialog));
+    ui::add_toolbar_button(ctx.toolbar, "_Save", "document-save-symbolic",
+                           "Save your changes (Ctrl+S)", [this] { save(); })
+        ->get_style_context()
+        ->add_class("efpdf-primary");
+    ui::add_toolbar_separator(ctx.toolbar);
 
     // Dropping a PDF onto the window opens it.
     ctx.window.drag_dest_set({Gtk::TargetEntry("text/uri-list")}, Gtk::DEST_DEFAULT_ALL,

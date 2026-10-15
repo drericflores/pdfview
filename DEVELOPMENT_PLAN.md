@@ -95,6 +95,12 @@ Known risks to check first:
 - [ ] Insert pages from another PDF
 - [ ] Optional: free-text and ink (freehand) annotations
 
+## Look and feel (0.4.0)
+
+- [x] One stylesheet with light and dark palettes (`features/appearance.cpp`), brand-colored menu bar, icon toolbar, segmented tool picker, card-style thumbnails, framed page (written, unverified on screen)
+- [ ] Review the look on a real screen and adjust colors, spacing and icons
+- [ ] Optional: a Preferences choice for accent color
+
 ## Phase 5 — Quality and release
 
 - [x] Unit tests for the library-free core (`make check`: page ranges, utilities)

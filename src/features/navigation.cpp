@@ -4,6 +4,7 @@
 
 #include "core/document_model.h"
 #include "ui/menu_builder.h"
+#include "ui/toolbar.h"
 #include "view/page_view.h"
 
 namespace efpdf {
@@ -11,13 +12,11 @@ namespace efpdf {
 Navigation::Navigation(AppContext &ctx) : ctx_(ctx) {
     auto &model = ctx.model;
 
-    auto add_button = [&ctx](const char *label, const sigc::slot<void> &slot) {
-        auto *button = Gtk::manage(new Gtk::Button(label, true));
-        button->signal_clicked().connect(slot);
-        ctx.toolbar.pack_start(*button, Gtk::PACK_SHRINK);
-    };
-    add_button("_Previous", [&model] { model.set_current_page(model.current_page() - 1); });
-    add_button("_Next", [&model] { model.set_current_page(model.current_page() + 1); });
+    ui::add_toolbar_button(ctx.toolbar, "_Previous", "go-previous-symbolic",
+                           "Previous page (Page Up)",
+                           [&model] { model.set_current_page(model.current_page() - 1); });
+    ui::add_toolbar_button(ctx.toolbar, "_Next", "go-next-symbolic", "Next page (Page Down)",
+                           [&model] { model.set_current_page(model.current_page() + 1); });
 
     entry_.set_width_chars(4);
     entry_.set_max_width_chars(6);
@@ -26,6 +25,7 @@ Navigation::Navigation(AppContext &ctx) : ctx_(ctx) {
     entry_.signal_activate().connect(sigc::mem_fun(*this, &Navigation::jump_from_entry));
     ctx.toolbar.pack_start(entry_, Gtk::PACK_SHRINK);
     ctx.toolbar.pack_start(total_label_, Gtk::PACK_SHRINK);
+    ui::add_toolbar_separator(ctx.toolbar);
 
     const Gdk::ModifierType ctrl = Gdk::CONTROL_MASK;
     auto &menus = ctx.menus;

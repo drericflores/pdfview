@@ -2,6 +2,7 @@
 
 #include "features/about.h"
 #include "features/annotations.h"
+#include "features/appearance.h"
 #include "features/dark_mode.h"
 #include "features/edit_commands.h"
 #include "features/file_commands.h"
@@ -33,6 +34,7 @@ MainWindow::MainWindow()
     menus_.declare({"_File", "_Edit", "_View", "_Help"});
 
     // --- features: one line each ------------------------------------------
+    features_.push_back(std::make_unique<Appearance>(ctx_));    // colors and styling
     auto files = std::make_unique<FileCommands>(ctx_);
     files_ = files.get();
     features_.push_back(std::move(files));

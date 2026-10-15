@@ -10,6 +10,12 @@ PageView::PageView(DocumentModel &model) : model_(model) {
     // so overlay coordinates equal drawing-area coordinates.
     overlay_.set_halign(Gtk::ALIGN_CENTER);
     overlay_.set_valign(Gtk::ALIGN_CENTER);
+    // Breathing room around the page. fit_width() and fit_page() subtract
+    // twice this margin (2 x 12 = the 24 px they allow for).
+    overlay_.set_margin_start(12);
+    overlay_.set_margin_end(12);
+    overlay_.set_margin_top(12);
+    overlay_.set_margin_bottom(12);
     area_.set_can_focus(true);
     area_.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
                      Gdk::BUTTON1_MOTION_MASK | Gdk::SCROLL_MASK);
@@ -169,6 +175,16 @@ bool PageView::on_area_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
     if (!surface_) return true;
     cr->set_source(surface_, 0, 0);
     cr->paint();
+
+    // A hairline frame so the page edge reads clearly against the backdrop.
+    cr->set_line_width(1.0);
+    if (dark_) {
+        cr->set_source_rgba(1.0, 1.0, 1.0, 0.20);
+    } else {
+        cr->set_source_rgba(0.0, 0.0, 0.0, 0.28);
+    }
+    cr->rectangle(0.5, 0.5, surface_->get_width() - 1.0, surface_->get_height() - 1.0);
+    cr->stroke();
     if (tool_) tool_->paint(*this, cr);
     signal_paint_overlay.emit(cr);
     return true;

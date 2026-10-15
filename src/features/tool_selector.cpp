@@ -19,6 +19,7 @@ ToolSelector::ToolSelector(AppContext &ctx) : ctx_(ctx) {
         }
         radio->set_mode(false);  // draw as a push button, not a round radio
         radio->set_tooltip_text(tools[i]->hint());
+        radio->get_style_context()->add_class("efpdf-tool");
         radio->signal_toggled().connect([this, i, radio] {
             if (radio->get_active()) select(i);
         });
@@ -32,9 +33,9 @@ ToolSelector::ToolSelector(AppContext &ctx) : ctx_(ctx) {
 
     // A status line under the toolbar: how to use the active tool, plus short
     // messages from tools ("Highlight added...").
-    hint_.set_halign(Gtk::ALIGN_START);
-    hint_.set_margin_start(8);
-    hint_.set_margin_bottom(4);
+    hint_.set_halign(Gtk::ALIGN_FILL);
+    hint_.set_xalign(0.0f);
+    hint_.get_style_context()->add_class("efpdf-hint");  // padding comes from the theme
     ctx.top_area.pack_start(hint_, Gtk::PACK_SHRINK);
     ctx.view.signal_message.connect([this](const Glib::ustring &message) {
         hint_.set_text(message);

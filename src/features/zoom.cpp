@@ -3,6 +3,7 @@
 #include "core/document_model.h"
 #include "core/settings.h"
 #include "ui/menu_builder.h"
+#include "ui/toolbar.h"
 #include "view/page_view.h"
 
 namespace efpdf {
@@ -27,17 +28,16 @@ Zoom::Zoom(AppContext &ctx) : ctx_(ctx) {
     menus.add_item("_View", "Fit Pa_ge", [&view] { view.fit_page(); }, GDK_KEY_2, ctrl);
     menus.add_separator("_View");
 
-    auto add_button = [&ctx](const char *label, const sigc::slot<void> &slot) {
-        auto *button = Gtk::manage(new Gtk::Button(label, true));
-        button->signal_clicked().connect(slot);
-        ctx.toolbar.pack_start(*button, Gtk::PACK_SHRINK);
-    };
     // Preferences > "Zoom when opening a file".
     ctx.model.signal_loaded.connect(sigc::mem_fun(*this, &Zoom::apply_open_zoom));
 
-    add_button("Zoom _-", zoom_out);
-    add_button("Zoom _+", zoom_in);
-    add_button("Fit _Width", [&view] { view.fit_width(); });
+    ui::add_toolbar_button(ctx.toolbar, "Zoom Out", "zoom-out-symbolic", "Zoom out (Ctrl+-)",
+                           zoom_out);
+    ui::add_toolbar_button(ctx.toolbar, "Zoom In", "zoom-in-symbolic", "Zoom in (Ctrl++)",
+                           zoom_in);
+    ui::add_toolbar_button(ctx.toolbar, "Fit Width", "zoom-fit-best-symbolic",
+                           "Fit the page to the window width (Ctrl+1)",
+                           [&view] { view.fit_width(); });
 }
 
 // Applies the chosen opening zoom the first time a given file is shown (not
