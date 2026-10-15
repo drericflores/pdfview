@@ -3,6 +3,6 @@
 #pragma once
 
 namespace efpdf {
-inline constexpr const char *kRelease = "0.4.0";
+inline constexpr const char *kRelease = "0.4.1";
 const char *version();  // git revision, for logs and --version only
 }  // namespace efpdf

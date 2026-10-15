@@ -16,8 +16,10 @@ const char *kLightPalette = R"CSS(
 @define-color efpdf_accent        #2563eb;
 @define-color efpdf_accent_dark   #1d4ed8;
 @define-color efpdf_accent_soft   #dfe9ff;
-@define-color efpdf_brand_top     #1b2f78;
-@define-color efpdf_brand_bottom  #264bb8;
+@define-color efpdf_menubar_top    #ffffff;
+@define-color efpdf_menubar_bottom #eef2f8;
+@define-color efpdf_menu_text      #000000;
+@define-color efpdf_menu_hover     rgba(0, 0, 0, 0.08);
 @define-color efpdf_bar           #ffffff;
 @define-color efpdf_bar_alt       #f3f6fb;
 @define-color efpdf_line          #dbe1ea;
@@ -33,8 +35,10 @@ const char *kDarkPalette = R"CSS(
 @define-color efpdf_accent        #6b96ff;
 @define-color efpdf_accent_dark   #4a78eb;
 @define-color efpdf_accent_soft   #243459;
-@define-color efpdf_brand_top     #0b111f;
-@define-color efpdf_brand_bottom  #16203a;
+@define-color efpdf_menubar_top    #0b111f;
+@define-color efpdf_menubar_bottom #16203a;
+@define-color efpdf_menu_text      #ffffff;
+@define-color efpdf_menu_hover     rgba(255, 255, 255, 0.18);
 @define-color efpdf_bar           #1a202b;
 @define-color efpdf_bar_alt       #212937;
 @define-color efpdf_line          #2c3544;
@@ -75,28 +79,59 @@ row:selected {
 // --- the look -----------------------------------------------------------------
 
 const char *kStyle = R"CSS(
-/* Menu bar: the brand color band across the top. */
+/* Menu bar: black text on a light bar (light mode), white text on a dark bar
+   (dark mode). A thin accent line underneath keeps the brand color. */
 menubar {
-    background-color: @efpdf_brand_bottom;
-    background-image: linear-gradient(to bottom, @efpdf_brand_top, @efpdf_brand_bottom);
-    border-bottom: 1px solid @efpdf_brand_top;
+    background-color: @efpdf_menubar_bottom;
+    background-image: linear-gradient(to bottom, @efpdf_menubar_top, @efpdf_menubar_bottom);
+    border-bottom: 2px solid @efpdf_accent;
     padding: 0 6px;
 }
 menubar > menuitem {
     background-color: transparent;
     background-image: none;
-    color: #ffffff;
+    color: @efpdf_menu_text;
     padding: 4px 11px;
     margin: 3px 1px;
     border-radius: 6px;
 }
 menubar > menuitem label {
     background-color: transparent;
-    color: #ffffff;
+    color: @efpdf_menu_text;
 }
 menubar > menuitem:hover,
 menubar > menuitem:selected {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: @efpdf_menu_hover;
+}
+
+/* Drop-down menus: same text color rule, on the toolbar's background. */
+menu {
+    background-color: @efpdf_bar;
+    background-image: none;
+    border: 1px solid @efpdf_line;
+    border-radius: 8px;
+    padding: 4px 0;
+}
+menu menuitem {
+    background-color: transparent;
+    background-image: none;
+    color: @efpdf_menu_text;
+    padding: 6px 14px;
+}
+menu menuitem label {
+    background-color: transparent;
+    color: @efpdf_menu_text;
+}
+menu menuitem:hover {
+    background-color: @efpdf_accent_soft;
+}
+menu menuitem:disabled label {
+    opacity: 0.45;
+}
+menu separator {
+    background-color: @efpdf_line;
+    min-height: 1px;
+    margin: 4px 0;
 }
 
 /* Toolbar */

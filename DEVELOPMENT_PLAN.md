@@ -97,7 +97,7 @@ Known risks to check first:
 
 ## Look and feel (0.4.0)
 
-- [x] One stylesheet with light and dark palettes (`features/appearance.cpp`), brand-colored menu bar, icon toolbar, segmented tool picker, card-style thumbnails, framed page (written, unverified on screen)
+- [x] One stylesheet with light and dark palettes (`features/appearance.cpp`), light menu bar with an accent line, icon toolbar, segmented tool picker, card-style thumbnails, framed page (written, unverified on screen)
 - [ ] Review the look on a real screen and adjust colors, spacing and icons
 - [ ] Optional: a Preferences choice for accent color
 

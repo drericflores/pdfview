@@ -21,7 +21,7 @@ This project is coded for educational purposes.
 - Text search across the whole document with highlighted matches (Ctrl+F)
 - Recent files list, drag-and-drop to open, and remembered window size, zoom
   level and dark mode
-- A colored, modern look: brand-colored menu bar, icon toolbar, accent-colored
+- A colored, modern look: light menu bar with an accent line, icon toolbar, accent-colored
   active tool, card-style thumbnails and a framed page on a soft backdrop
 - Dark mode (inverts the page and recolors the whole window with a matching dark palette)
 - Window title shows the file name, the current page and an `*` for unsaved edits
@@ -200,7 +200,7 @@ program logs each tool selection and annotation it creates.
 
 By: Dr. Eric Oliver Flores Toro  
 Anatolica Consulting, LLC  
-October 2026 (version 0.4.0)
+October 2026 (version 0.4.1)
 
 ## License
 
