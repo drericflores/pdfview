@@ -5,6 +5,8 @@
 // Check boxes and radio buttons toggle on click; drop-downs open in place.
 #pragma once
 
+#include <poppler.h>
+
 #include "features/feature.h"
 #include "view/tool.h"
 

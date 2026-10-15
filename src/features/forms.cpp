@@ -219,7 +219,7 @@ void FormTool::release_editor() {
     }
     if (editor) {
         Gtk::Overlay &overlay = ctx_.view.overlay();
-        Glib::signal_idle().connect_once([&overlay, editor] { overlay.remove(*editor); });
+        Glib::signal_idle().connect_once([&overlay, editor] { static_cast<Gtk::Container &>(overlay).remove(*editor); });
     }
 }
 
