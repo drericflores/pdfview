@@ -43,9 +43,12 @@ LoadResult DocumentModel::load_file(const std::string &file,
 }
 
 bool DocumentModel::write_copy(const std::string &file, std::string &err) const {
+    // poppler_document_save() writes the document including in-memory edits
+    // (annotations, form values). poppler_document_save_a_copy() silently
+    // drops them in Poppler 24.02, so it must not be used here. Saving to a
+    // path other than the one the document was read from is fine.
     GError *error = nullptr;
-    if (!poppler_document_save_a_copy(doc_.get(), util::to_uri(file).c_str(),
-                                      &error)) {
+    if (!poppler_document_save(doc_.get(), util::to_uri(file).c_str(), &error)) {
         err = error ? error->message : "unknown error";
         if (error) g_error_free(error);
         return false;
