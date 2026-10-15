@@ -1,6 +1,8 @@
-// version.h - the git revision this binary was built from (see Makefile).
+// version.h - release number (shown in Help > About) and the git revision
+// the binary was built from (see Makefile; shown by `efpdf --version`).
 #pragma once
 
 namespace efpdf {
-const char *version();
+inline constexpr const char *kRelease = "0.2.0";
+const char *version();  // git revision, for logs and --version only
 }  // namespace efpdf

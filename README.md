@@ -1,6 +1,6 @@
-# EFPDF — Easy & Flexible PDF
+# efpdf (Easy & Flexible PDF)
 
-EFPDF is a native Linux PDF viewer and editor written in C++17. It is built with
+efpdf is a native Linux PDF viewer and editor written in C++17. It is built with
 the GTKmm 3 toolkit, the Poppler-GLib rendering library and the QPDF library.
 (The project was previously named *PdfView*; the GitHub repository is still
 called `pdfview`.)
@@ -155,6 +155,12 @@ Edits stay in memory (the title shows `*`) until you press Ctrl+S.
 
 If something does not behave, run `./efpdf file.pdf 2>&1 | tee run.log`; the
 program logs each tool selection and annotation it creates.
+
+## Credits
+
+By: Dr. Eric Oliver Flores Toro  
+Anatolica Consulting, LLC  
+October 2026 (version 0.2.0)
 
 ## License
 

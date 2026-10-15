@@ -12,12 +12,16 @@ About::About(AppContext &ctx) : ctx_(ctx) {
 void About::show() {
     Gtk::AboutDialog dlg;
     dlg.set_transient_for(ctx_.window);
-    dlg.set_program_name("EFPDF");
+    dlg.set_program_name("efpdf (Easy & Flexible PDF)");
     dlg.set_comments(
-        "EFPDF (Easy & Flexible PDF): a lightweight PDF viewer and editor "
-        "built with GTKmm 3, Poppler-GLib and QPDF.");
-    dlg.set_version(efpdf::version());
-    dlg.set_authors({"Dr. Eric O. Flores"});
+        "A lightweight PDF viewer and editor built with GTKmm 3, "
+        "Poppler-GLib and QPDF.");
+    dlg.set_version(efpdf::kRelease);
+    dlg.set_authors({"Dr. Eric Oliver Flores Toro"});
+    dlg.set_copyright(
+        "By: Dr. Eric Oliver Flores Toro\n"
+        "Anatolica Consulting, LLC\n"
+        "October 2026");
     dlg.set_license_type(Gtk::LICENSE_MIT_X11);
     dlg.set_website("https://github.com/drericflores/pdfview");
     dlg.run();
