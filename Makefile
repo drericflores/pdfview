@@ -1,15 +1,18 @@
 # Makefile for EFPDF (Easy & Flexible PDF)
 # GTKmm 3 + Poppler-GLib (render/annotate/forms) + QPDF (page operations)
+#
+# Every .cpp under src/ is built automatically, so adding a feature module
+# needs no Makefile change.
 
 CXX      := g++
 PKGS     := gtkmm-3.0 poppler-glib libqpdf
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -MMD -MP $(shell pkg-config --cflags $(PKGS))
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -MMD -MP -Isrc $(shell pkg-config --cflags $(PKGS))
 LDFLAGS  := $(shell pkg-config --libs $(PKGS))
 
 TARGET := efpdf
-SRC    := main.cpp pdfviewer.cpp pdfedit.cpp
-OBJ    := $(SRC:.cpp=.o)
-DEP    := $(SRC:.cpp=.d)
+SRC    := $(shell find src -name '*.cpp' | sort)
+OBJ    := $(SRC:src/%.cpp=build/%.o)
+DEP    := $(OBJ:.o=.d)
 
 PREFIX ?= /usr/local
 
@@ -18,11 +21,12 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CXX) $(OBJ) -o $@ $(LDFLAGS)
 
-%.o: %.cpp
+build/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(DEP) $(TARGET)
+	rm -rf build $(TARGET)
 
 run: all
 	./$(TARGET)

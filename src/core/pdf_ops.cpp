@@ -1,4 +1,4 @@
-#include "pdfedit.h"
+#include "core/pdf_ops.h"
 
 #include <qpdf/QPDF.hh>
 #include <qpdf/QPDFPageDocumentHelper.hh>
@@ -9,12 +9,16 @@
 #include <memory>
 #include <numeric>
 
-namespace pdfedit {
+namespace efpdf::pdf_ops {
 namespace {
 
 void write_file(QPDF &pdf, const std::string &out) {
     QPDFWriter writer(pdf, out.c_str());
     writer.write();
+}
+
+void read_file(QPDF &pdf, const std::string &in, const std::string &password) {
+    pdf.processFile(in.c_str(), password.empty() ? nullptr : password.c_str());
 }
 
 bool check_index(int page, size_t count, std::string &err) {
@@ -28,16 +32,16 @@ bool check_index(int page, size_t count, std::string &err) {
 }  // namespace
 
 bool rotate_page(const std::string &in, const std::string &out, int page,
-                 int degrees, std::string &err) {
+                 int degrees, const std::string &password, std::string &err) {
     try {
         QPDF pdf;
-        pdf.processFile(in.c_str());
+        read_file(pdf, in, password);
         QPDFPageDocumentHelper doc(pdf);
         auto pages = doc.getAllPages();
         if (!check_index(page, pages.size(), err)) return false;
 
         // Normalise to 0/90/180/270 so qpdf never sees a negative angle.
-        int angle = ((degrees % 360) + 360) % 360;
+        const int angle = ((degrees % 360) + 360) % 360;
         pages[page].rotatePage(angle, true);
         write_file(pdf, out);
         return true;
@@ -48,10 +52,10 @@ bool rotate_page(const std::string &in, const std::string &out, int page,
 }
 
 bool delete_page(const std::string &in, const std::string &out, int page,
-                 std::string &err) {
+                 const std::string &password, std::string &err) {
     try {
         QPDF pdf;
-        pdf.processFile(in.c_str());
+        read_file(pdf, in, password);
         QPDFPageDocumentHelper doc(pdf);
         auto pages = doc.getAllPages();
         if (!check_index(page, pages.size(), err)) return false;
@@ -69,10 +73,10 @@ bool delete_page(const std::string &in, const std::string &out, int page,
 }
 
 bool move_page(const std::string &in, const std::string &out, int from, int to,
-               std::string &err) {
+               const std::string &password, std::string &err) {
     try {
         QPDF pdf;
-        pdf.processFile(in.c_str());
+        read_file(pdf, in, password);
         QPDFPageDocumentHelper doc(pdf);
         auto pages = doc.getAllPages();
         if (!check_index(from, pages.size(), err) ||
@@ -126,10 +130,10 @@ bool merge(const std::vector<std::string> &inputs, const std::string &out,
 }
 
 bool extract_range(const std::string &in, const std::string &out, int first,
-                   int last, std::string &err) {
+                   int last, const std::string &password, std::string &err) {
     try {
         QPDF source;
-        source.processFile(in.c_str());
+        read_file(source, in, password);
         QPDFPageDocumentHelper source_doc(source);
         auto pages = source_doc.getAllPages();
         if (!check_index(first, pages.size(), err) ||
@@ -153,4 +157,4 @@ bool extract_range(const std::string &in, const std::string &out, int first,
     }
 }
 
-}  // namespace pdfedit
+}  // namespace efpdf::pdf_ops

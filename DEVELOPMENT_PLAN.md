@@ -20,6 +20,7 @@ Plan revised: 14 October 2026
 | Page operations, merge, split | libqpdf (Poppler cannot restructure documents) |
 | Saving | In place, through a temp file and atomic rename; Save As also available |
 | Editing scope | Annotations, form filling, page operations, merge/split |
+| Structure | Modular: one header + source file per feature under `src/features/`; a thin window shell; GTK-free `core/` layer |
 | Working location | Your computer at `/home/eric/development/cpp/pdfview/` (not yet linked to this chat; work so far is in the GitHub clone) |
 
 ## Phase 0 — Port and foundation (written, not yet compiled)
@@ -39,6 +40,8 @@ GTKmm, Poppler or QPDF development packages.
 - [x] Save in place and Save As; unsaved-changes prompt on close, open and quit
 - [x] Rename to EFPDF in code, Makefile, README, About dialog and temp files
 - [x] README rewritten to match the code
+- [x] Restructure into feature modules (`src/core`, `src/ui`, `src/view`, `src/features`, `src/app`)
+- [x] Add search, page-jump box, fit width / fit page, Ctrl+wheel zoom, recent files, drag-and-drop open, and remembered settings
 
 ## Phase 1 — Verify on your machine (next)
 
@@ -56,6 +59,7 @@ Nothing below can be trusted until the code builds and runs.
 
 Known risks to check first:
 
+- Text-search hit rectangles are assumed to be in PDF coordinates (origin bottom-left), like annotations; if highlights land vertically mirrored, flip the y axis in `Search::paint`
 - Form-field and annotation hit-testing assumes Poppler returns PDF coordinates
   (origin bottom-left); if clicks land in the wrong place, flip the y axis in
   `edit_form_field_at` / `delete_annotation_at`
@@ -68,17 +72,17 @@ Known risks to check first:
 
 - [ ] Rename the GitHub repository `pdfview` → `efpdf` (GitHub redirects the old URL); update the About dialog website
 - [ ] Rename your local folder to match
-- [ ] Rename source files and the class (`pdfviewer.*` → `efpdf_window.*`, `PdfViewer` → `EfpdfWindow`) — optional, cosmetic
+- [x] Source files and classes already use the new `efpdf` namespace and `MainWindow`
 - [ ] Add a `.desktop` file and icon so EFPDF appears in the app launcher
 
 ## Phase 3 — Viewer features (from your earlier list)
 
-- [ ] Text search with result highlighting and next/previous
-- [ ] Page-jump entry (type a page number)
-- [ ] Fit to width / fit to page
+- [x] Text search with result highlighting and next/previous (written, unverified)
+- [x] Page-jump entry (written, unverified)
+- [x] Fit to width / fit to page (written, unverified)
 - [ ] Keyboard shortcuts beyond the current set (Home/End, `/` for search, `G` for go-to-page)
-- [ ] Recent files list (stored in `~/.config/efpdf/`)
-- [ ] Remember window size, zoom and dark mode between runs
+- [x] Recent files list (stored in `~/.config/efpdf/`) (written, unverified)
+- [x] Remember window size, zoom and dark mode between runs (written, unverified)
 - [ ] Continuous scrolling through pages (optional, larger change)
 
 ## Phase 4 — Editing polish

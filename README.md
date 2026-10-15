@@ -13,8 +13,12 @@ This project is coded for educational purposes.
 
 - Open PDFs from the File menu, the toolbar, or the command line (`efpdf file.pdf`)
 - Password prompt for encrypted PDFs
-- Page navigation (toolbar, menu, Page Up / Page Down) and a thumbnail sidebar
-- Zoom in, zoom out and actual size
+- Page navigation (toolbar, menu, Page Up / Page Down), a page-jump box, and a
+  thumbnail sidebar that fills in lazily
+- Zoom in/out, actual size, fit width and fit page (Ctrl+mouse wheel also zooms)
+- Text search across the whole document with highlighted matches (Ctrl+F)
+- Recent files list, drag-and-drop to open, and remembered window size, zoom
+  level and dark mode
 - Dark mode (inverts the page and switches the GTK theme to its dark variant)
 - Window title shows the file name, the current page and an `*` for unsaved edits
 
@@ -32,15 +36,55 @@ This project is coded for educational purposes.
 
 ## Architecture
 
-| File | Role |
-| --- | --- |
-| `main.cpp` | Creates the `Gtk::Application` and the main window |
-| `pdfviewer.h` / `pdfviewer.cpp` | `PdfViewer`, a `Gtk::Window` subclass: menus, toolbar, thumbnails, `Gtk::DrawingArea` page view, annotations and form filling (Poppler) |
-| `pdfedit.h` / `pdfedit.cpp` | Structural operations (rotate, delete, move, merge, extract) implemented with QPDF |
+EFPDF is modular: every feature lives in its own header and source file under
+`src/features/`, and the window shell only assembles them. A feature plugs in
+through a small `AppContext` (menus, toolbar, sidebar, mouse tools, settings,
+document model) and never includes another feature's code.
+
+```
+src/
+  main.cpp                 entry point
+  app/main_window.*        window shell: owns shared objects, builds each feature
+  core/                    no GTK widgets; reusable on its own
+    document_model.*         open document, current page, unsaved flag, signals
+    pdf_ops.*                rotate / delete / move / merge / extract (QPDF)
+    settings.*               ~/.config/efpdf/settings.ini
+    util.*, gobject_ptr.h    temp files, URIs, RAII for Poppler objects
+  ui/
+    dialogs.*                shared dialogs (errors, file choosers, prompts)
+    menu_builder.*           lets features add their own menu entries
+  view/
+    page_view.*              renders the page; forwards mouse input to the active tool
+    tool.h, tool_registry.h  the interface mouse tools implement
+  features/                one module per feature
+    file_commands.*          open / save / save as / close / quit / drag-and-drop
+    recent_files.*           File > Open Recent
+    navigation.*             previous/next, page-jump box, page shortcuts
+    thumbnails.*             thumbnail sidebar
+    zoom.*                   zoom, fit width, fit page
+    dark_mode.*              dark mode
+    search.*                 find bar and match highlighting
+    annotations.*            highlight, underline, notes, right-click delete
+    forms.*                  fill form fields
+    page_ops.*               rotate, delete, move pages
+    merge_split.*            merge PDFs, extract a page range
+    tool_selector.*          toolbar drop-down for the active tool
+    about.*                  Help > About
+```
 
 Poppler can render, annotate and fill forms but cannot restructure a document,
 which is why page operations go through QPDF. Page operations work on a
 temporary copy; the opened file changes only when you choose Save.
+
+### Adding a feature
+
+1. Create `src/features/my_feature.h` and `.cpp` with a class derived from
+   `Feature` whose constructor takes an `AppContext &` and installs its menu
+   items, toolbar widgets or tools.
+2. Add one `features_.push_back(std::make_unique<MyFeature>(ctx_));` line in
+   `src/app/main_window.cpp`.
+
+The Makefile builds every `.cpp` under `src/` automatically.
 
 ## Building
 
@@ -74,6 +118,10 @@ sudo make install
 | Ctrl+O / Ctrl+S / Ctrl+Shift+S | Open / Save / Save As |
 | Ctrl+W / Ctrl+Q | Close document / Quit |
 | Page Up / Page Down | Previous / next page |
+| Ctrl+Home / Ctrl+End | First / last page |
+| Ctrl+G | Go to page |
+| Ctrl+F / F3 / Shift+F3 | Find / next match / previous match |
+| Ctrl+1 / Ctrl+2 | Fit width / fit page |
 | Ctrl+Plus / Ctrl+Minus / Ctrl+0 | Zoom in / zoom out / actual size |
 | Ctrl+L / Ctrl+R | Rotate page left / right |
 | Ctrl+Alt+Up / Ctrl+Alt+Down | Move page up / down |
