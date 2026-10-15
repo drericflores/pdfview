@@ -1,18 +1,18 @@
-# Makefile for PdfView - GTK+3 + Poppler-based PDF viewer
+# Makefile for EFPDF (Easy & Flexible PDF)
+# GTKmm 3 + Poppler-GLib (render/annotate/forms) + QPDF (page operations)
 
-# Compiler and flags
-CXX := g++
-CXXFLAGS := -std=c++17 -O2 `pkg-config --cflags gtk+-3.0 poppler-glib`
-LDFLAGS := `pkg-config --libs gtk+-3.0 poppler-glib`
+CXX      := g++
+PKGS     := gtkmm-3.0 poppler-glib libqpdf
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -MMD -MP $(shell pkg-config --cflags $(PKGS))
+LDFLAGS  := $(shell pkg-config --libs $(PKGS))
 
-# Output binary
-TARGET := pdfview
+TARGET := efpdf
+SRC    := main.cpp pdfviewer.cpp pdfedit.cpp
+OBJ    := $(SRC:.cpp=.o)
+DEP    := $(SRC:.cpp=.d)
 
-# Source files
-SRC := main.cpp pdfviewer.cpp
-OBJ := $(SRC:.cpp=.o)
+PREFIX ?= /usr/local
 
-# Default target
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
@@ -21,12 +21,18 @@ $(TARGET): $(OBJ)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean up build artifacts
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(OBJ) $(DEP) $(TARGET)
 
-# Run the app
 run: all
 	./$(TARGET)
 
-.PHONY: all clean run
+install: all
+	install -Dm755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+
+-include $(DEP)
+
+.PHONY: all clean run install uninstall

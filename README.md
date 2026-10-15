@@ -1,40 +1,95 @@
-# PdfView
+# EFPDF — Easy & Flexible PDF
 
-This project is coded for educational purposes only. PdfView is a native Linux application written in C++ that provides a clean and functional interface for viewing PDF documents. Built using the GTKmm toolkit and Poppler-GLib rendering backend, PdfView focuses on reliability, responsiveness, and extensibility. Its current implementation provides users with essential features for loading and navigating PDF files through an intuitive graphical interface. PdfView is designed to be lightweight and portable, making it ideal for users who need a no-frills, platform-native viewer with a solid foundation for future expansion.
+EFPDF is a native Linux PDF viewer and editor written in C++17. It is built with
+the GTKmm 3 toolkit, the Poppler-GLib rendering library and the QPDF library.
+(The project was previously named *PdfView*; the GitHub repository is still
+called `pdfview`.)
 
-At the core of PdfView is a custom Gtk::Window subclass that manages the full lifecycle of a document—from file selection, rendering, and page navigation, to graceful closure. Upon launching the application, users are greeted with a main window sized appropriately for document display. The window features a menu bar that includes a "File" menu with options to open a PDF file, close the currently loaded document, or quit the application entirely. These actions are handled through signal connections that bind menu items to specific handler functions, providing a responsive and maintainable design.
+This project is coded for educational purposes.
 
-Once a document is opened, PdfView uses the Poppler-GLib backend to parse and render individual pages onto a GTK drawing surface. The rendered content is displayed via a custom Gtk::DrawingArea, which is automatically updated whenever the user navigates to a new page or modifies the zoom level. Page rendering takes into account user-defined zoom scaling and dynamically updates the window title with the current page number for context. Navigation is handled through both a toolbar and menu options that allow the user to move forward and backward through the document one page at a time.
+## Features
 
-The user interface also includes a zoom control that increases or decreases the scaling factor applied to each page. This enables users to closely inspect technical documents or shrink large layouts to fit the viewing area. PdfView internally recalculates the page surface and triggers a redraw whenever the zoom level changes, ensuring consistent rendering without memory leaks or rendering artifacts.
+**Viewing**
 
-Although still under active development, PdfView includes the framework for additional enhancements. A dark mode toggle has been stubbed into the menu system to support theme switching in future releases. Similarly, an "About" dialog is implemented under the Help menu, which displays the application’s name, author, technology stack, and development context. This information is dynamically presented using GTK’s built-in dialog framework to ensure consistency with modern Linux desktop environments.
+- Open PDFs from the File menu, the toolbar, or the command line (`efpdf file.pdf`)
+- Password prompt for encrypted PDFs
+- Page navigation (toolbar, menu, Page Up / Page Down) and a thumbnail sidebar
+- Zoom in, zoom out and actual size
+- Dark mode (inverts the page and switches the GTK theme to its dark variant)
+- Window title shows the file name, the current page and an `*` for unsaved edits
 
-The current release of PdfView was authored by Dr. Eric O. Flores in June 2025 and represents a collaborative effort that leverages both manual coding and AI-assisted development through ChatGPT. The codebase adheres to clean architectural principles, separating UI logic from rendering operations, and making use of signal-slot patterns to simplify event handling. PdfView is Wayland-compatible and avoids deprecated GTK2/Cairo rendering paths that often cause segmentation faults in newer display environments.
+**Editing**
 
-This application is compiled using a standard GNU Makefile and requires pkg-config, gtkmm-3.0, and poppler-glib development libraries to be installed. Once dependencies are satisfied, building the application is as simple as invoking make from the project directory. Executing the compiled binary (./pdfview) will launch the viewer and present the full GUI environment ready for interaction.
+- **Annotations:** highlight, underline and sticky notes; right-click an
+  annotation to delete it
+- **Forms:** fill text fields, check boxes, radio buttons and drop-down choices
+- **Pages:** rotate, delete and move pages
+- **Merge and split:** merge several PDFs into one; extract a page range to a new file
+- **Saving:** Save writes back to the opened file (through a temporary file and
+  an atomic rename, so a failed write cannot destroy the original); Save As
+  writes a new file. Edits stay in memory until you save, and EFPDF asks before
+  discarding them.
 
-### Installation on Pop!_OS
+## Architecture
 
-To build PdfView on Pop!_OS (or any Ubuntu-based system), first ensure the required packages are installed:
+| File | Role |
+| --- | --- |
+| `main.cpp` | Creates the `Gtk::Application` and the main window |
+| `pdfviewer.h` / `pdfviewer.cpp` | `PdfViewer`, a `Gtk::Window` subclass: menus, toolbar, thumbnails, `Gtk::DrawingArea` page view, annotations and form filling (Poppler) |
+| `pdfedit.h` / `pdfedit.cpp` | Structural operations (rotate, delete, move, merge, extract) implemented with QPDF |
+
+Poppler can render, annotate and fill forms but cannot restructure a document,
+which is why page operations go through QPDF. Page operations work on a
+temporary copy; the opened file changes only when you choose Save.
+
+## Building
+
+EFPDF needs `pkg-config` and the development packages for GTKmm 3, Poppler-GLib
+and QPDF.
+
+On Pop!_OS, Ubuntu and Debian:
 
 ```bash
 sudo apt update
-sudo apt install build-essential pkg-config libgtkmm-3.0-dev libpoppler-glib-dev
+sudo apt install build-essential pkg-config libgtkmm-3.0-dev libpoppler-glib-dev libqpdf-dev
 ```
 
-After installing the dependencies, navigate to the source directory and build the project:
+Then build and run:
 
 ```bash
 make
-./pdfview
+./efpdf [file.pdf]
 ```
 
-If you wish to install PdfView system-wide, you can manually copy the binary to a location in your $PATH, such as /usr/local/bin.
+To install system-wide (default prefix `/usr/local`):
 
-### License
+```bash
+sudo make install
+```
 
-PdfView is released under the MIT License. This permissive license allows you to use, modify, and distribute the code for personal, educational, or commercial purposes, provided that the original license text and copyright
+## Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+O / Ctrl+S / Ctrl+Shift+S | Open / Save / Save As |
+| Ctrl+W / Ctrl+Q | Close document / Quit |
+| Page Up / Page Down | Previous / next page |
+| Ctrl+Plus / Ctrl+Minus / Ctrl+0 | Zoom in / zoom out / actual size |
+| Ctrl+L / Ctrl+R | Rotate page left / right |
+| Ctrl+Alt+Up / Ctrl+Alt+Down | Move page up / down |
+| Ctrl+D | Toggle dark mode |
+
+## Using the editing tools
+
+Pick a tool from the drop-down on the right of the toolbar:
+
+- **Select / Fill forms:** click a form field to edit it
+- **Highlight / Underline:** drag a rectangle over the text
+- **Add note:** click where the note should go, then type its text
+
+## License
+
+EFPDF is released under the MIT License. This permissive license allows you to use, modify, and distribute the code for personal, educational, or commercial purposes, provided that the original license text and copyright
 notice are included in all copies or substantial portions of the software.
 
 ---
@@ -65,10 +120,10 @@ THE SOFTWARE.
 
 ---
 
-### Contributing
+## Contributing
 
-Contributions to PdfView are welcome and encouraged. Developers interested in enhancing the functionality—such as implementing search, thumbnail navigation, printing support, or annotations—are invited to fork the repository and submit pull requests. All contributions should be modular, memory-safe, and follow existing coding patterns where possible.
-
-Before submitting patches, please ensure the application builds cleanly with no warnings on a clean system. Bug reports, feature requests, and suggestions for UI improvements are also welcome and may be submitted via the repository’s issues page.
-
-If you are unfamiliar with GTKmm or Poppler-GLib, you are encouraged to review their documentation to better align with PdfView’s architectural principles. Respect for clean signal handling, RAII memory management, and cross-environment compatibility (especially under Wayland) is highly appreciated in contributions.
+Contributions are welcome. Ideas that would fit well: text search, fit-to-width
+zoom, a recent-files list, undo/redo for edits, printing and packaging.
+Please keep changes modular, use RAII for resource management, and make sure the
+project builds cleanly with `-Wall -Wextra` before opening a pull request.
+Bug reports and feature requests can be filed on the repository's issues page.

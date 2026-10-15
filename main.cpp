@@ -1,12 +1,13 @@
-#include <gtk/gtk.h>
+// EFPDF (Easy & Flexible PDF) - entry point.
+#include <gtkmm.h>
+
 #include "pdfviewer.h"
 
 int main(int argc, char *argv[]) {
-    gtk_init(&argc, &argv);
+    auto app = Gtk::Application::create(argc, argv, "io.github.drericflores.efpdf");
 
-    GtkWidget *window = create_pdf_viewer_window();
-    gtk_widget_show_all(window);  // ✅ Required to make all widgets visible
+    PdfViewer window;
+    if (argc > 1) window.open_file(argv[1]);  // efpdf file.pdf
 
-    gtk_main();
-    return 0;
+    return app->run(window);
 }

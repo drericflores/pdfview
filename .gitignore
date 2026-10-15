@@ -1,5 +1,7 @@
 # Build artifacts
 *.o
+*.d
+efpdf
 pdfview
 good_pdfview
 
