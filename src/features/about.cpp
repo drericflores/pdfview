@@ -1,5 +1,6 @@
 #include "features/about.h"
 
+#include "core/version.h"
 #include "ui/menu_builder.h"
 
 namespace efpdf {
@@ -15,6 +16,7 @@ void About::show() {
     dlg.set_comments(
         "EFPDF (Easy & Flexible PDF): a lightweight PDF viewer and editor "
         "built with GTKmm 3, Poppler-GLib and QPDF.");
+    dlg.set_version(efpdf::version());
     dlg.set_authors({"Dr. Eric O. Flores"});
     dlg.set_license_type(Gtk::LICENSE_MIT_X11);
     dlg.set_website("https://github.com/drericflores/pdfview");

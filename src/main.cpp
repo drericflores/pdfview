@@ -1,9 +1,18 @@
 // EFPDF (Easy & Flexible PDF) - entry point.
 #include <gtkmm.h>
 
+#include <cstdio>
+#include <cstring>
+
 #include "app/main_window.h"
+#include "core/version.h"
 
 int main(int argc, char *argv[]) {
+    if (argc > 1 && std::strcmp(argv[1], "--version") == 0) {
+        std::printf("efpdf %s\n", efpdf::version());
+        return 0;
+    }
+    g_message("efpdf %s starting", efpdf::version());
     auto app = Gtk::Application::create(argc, argv, "io.github.drericflores.efpdf");
 
     efpdf::MainWindow window;
