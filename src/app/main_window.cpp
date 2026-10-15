@@ -3,6 +3,7 @@
 #include "features/about.h"
 #include "features/annotations.h"
 #include "features/dark_mode.h"
+#include "features/edit_commands.h"
 #include "features/file_commands.h"
 #include "features/forms.h"
 #include "features/merge_split.h"
@@ -21,7 +22,7 @@ MainWindow::MainWindow()
     : accel_(Gtk::AccelGroup::create()),
       menus_(menubar_, accel_),
       view_(model_),
-      ctx_{*this, model_, view_, menus_, toolbar_, top_area_, sidebar_, settings_, tools_} {
+      ctx_{*this, model_, view_, menus_, toolbar_, top_area_, sidebar_, settings_, tools_, history_} {
     set_default_size(settings_.get_int("window", "width", 1100),
                      settings_.get_int("window", "height", 800));
     add_accel_group(accel_);
@@ -41,6 +42,7 @@ MainWindow::MainWindow()
     features_.push_back(std::make_unique<Search>(ctx_));
     features_.push_back(std::make_unique<Forms>(ctx_));        // registers the default tool
     features_.push_back(std::make_unique<Annotations>(ctx_));
+    features_.push_back(std::make_unique<EditCommands>(ctx_));  // top of the Edit menu
     features_.push_back(std::make_unique<PageOps>(ctx_));
     features_.push_back(std::make_unique<MergeSplit>(ctx_, *files_));
     features_.push_back(std::make_unique<DarkMode>(ctx_));

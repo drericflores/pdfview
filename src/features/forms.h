@@ -7,6 +7,8 @@
 
 #include <poppler.h>
 
+#include <string>
+
 #include "features/feature.h"
 #include "view/tool.h"
 
@@ -38,6 +40,10 @@ private:
     Gtk::TextView *text_view_ = nullptr;
     Gtk::ComboBoxText *combo_ = nullptr;
     int chosen_item_ = -1;
+    // State when the editor opened, so a change can be undone.
+    int page_index_ = 0;
+    std::string orig_text_;
+    int orig_choice_ = -1;
 };
 
 class Forms : public Feature {

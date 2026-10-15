@@ -48,11 +48,13 @@ src/
   core/                    no GTK widgets; reusable on its own
     document_model.*         open document, current page, unsaved flag, signals
     pdf_ops.*                rotate / delete / move / merge / extract (QPDF)
+    history.*                undo/redo stack for document edits
     settings.*               ~/.config/efpdf/settings.ini
     util.*, gobject_ptr.h    temp files, URIs, RAII for Poppler objects
   ui/
     dialogs.*                shared dialogs (errors, file choosers, prompts)
     menu_builder.*           lets features add their own menu entries
+    text_undo.*              undo for typing inside an editor widget
   view/
     page_view.*              renders the page; forwards mouse input to the active tool
     tool.h, tool_registry.h  the interface mouse tools implement
@@ -66,6 +68,7 @@ src/
     search.*                 find bar and match highlighting
     annotations.*            highlight, underline, notes, right-click delete
     forms.*                  fill form fields
+    edit_commands.*          Edit > undo, redo, cut, copy, paste
     page_ops.*               rotate, delete, move pages
     merge_split.*            merge PDFs, extract a page range
     tool_selector.*          toolbar drop-down for the active tool
@@ -123,6 +126,8 @@ sudo make install
 | Ctrl+F / F3 / Shift+F3 | Find / next match / previous match |
 | Ctrl+1 / Ctrl+2 | Fit width / fit page |
 | Ctrl+Plus / Ctrl+Minus / Ctrl+0 | Zoom in / zoom out / actual size |
+| Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) | Undo / redo |
+| Ctrl+X / Ctrl+C / Ctrl+V | Cut / copy / paste (inside a form field or the search box) |
 | Ctrl+L / Ctrl+R | Rotate page left / right |
 | Ctrl+Alt+Up / Ctrl+Alt+Down | Move page up / down |
 | Ctrl+D | Toggle dark mode |
@@ -135,6 +140,11 @@ instructions under the toolbar always tells you what the active tool does.
 - **Fill forms:** click a form field and type directly into it. Enter keeps
   the value, Esc cancels. Check boxes and radio buttons toggle on click, and
   drop-downs open in place.
+- **Undo and copy/paste while filling forms:** while typing in a field, Ctrl+Z
+  and Ctrl+Shift+Z undo and redo your typing, and Ctrl+X / C / V use the
+  clipboard. After pressing Enter, Ctrl+Z undoes the whole fill-in (text,
+  drop-down choice, check box or radio button) and Ctrl+Shift+Z redoes it. The
+  undo history starts fresh when a file is opened, closed or saved.
 - **Highlight / Underline:** press, drag across the text, then release.
 - **Note:** click where the note should go, then type its text.
 - **Delete an annotation:** right-click it.

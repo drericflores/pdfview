@@ -4,6 +4,8 @@
 #include <string>
 
 #include "core/document_model.h"
+#include "core/history.h"
+#include "ui/text_undo.h"
 #include "view/page_view.h"
 #include "view/tool_registry.h"
 
@@ -13,6 +15,72 @@ namespace {
 bool inside(const PopplerRectangle &r, double x, double y) {
     return x >= std::min(r.x1, r.x2) && x <= std::max(r.x1, r.x2) &&
            y >= std::min(r.y1, r.y2) && y <= std::max(r.y1, r.y2);
+}
+
+// One reversible change to a form field. Fields are found again by page and id
+// so the step still works after the page object has been released.
+struct FieldChange {
+    enum Kind { Text, Choice, Check, Radio } kind = Text;
+    int page = 0;
+    int id = 0;
+    std::string old_text, new_text;
+    int old_choice = -1, new_choice = -1;
+    bool old_state = false, new_state = false;
+    int old_radio_id = -1;  // the radio button that was selected before
+};
+
+PopplerFormField *find_field(GList *mappings, int id) {
+    for (GList *l = mappings; l; l = l->next) {
+        auto *m = static_cast<PopplerFormFieldMapping *>(l->data);
+        if (poppler_form_field_get_id(m->field) == id) return m->field;
+    }
+    return nullptr;
+}
+
+// Applies the "before" values (undo) or "after" values (redo) of a change.
+void apply_change(AppContext &ctx, const FieldChange &c, bool undo) {
+    PagePtr page = ctx.model.page(c.page);
+    if (!page) return;
+    ctx.model.set_current_page(c.page);
+
+    GList *mappings = poppler_page_get_form_field_mapping(page.get());
+    PopplerFormField *field = find_field(mappings, c.id);
+    if (field) {
+        switch (c.kind) {
+            case FieldChange::Text:
+                poppler_form_field_text_set_text(field,
+                                                 (undo ? c.old_text : c.new_text).c_str());
+                break;
+            case FieldChange::Choice: {
+                const int item = undo ? c.old_choice : c.new_choice;
+                poppler_form_field_choice_unselect_all(field);
+                if (item >= 0) poppler_form_field_choice_select_item(field, item);
+                break;
+            }
+            case FieldChange::Check:
+                poppler_form_field_button_set_state(field, undo ? c.old_state : c.new_state);
+                break;
+            case FieldChange::Radio:
+                if (!undo) {
+                    poppler_form_field_button_set_state(field, TRUE);
+                } else if (PopplerFormField *prev =
+                               c.old_radio_id >= 0 ? find_field(mappings, c.old_radio_id)
+                                                   : nullptr) {
+                    poppler_form_field_button_set_state(prev, TRUE);  // unchecks `field`
+                } else {
+                    poppler_form_field_button_set_state(field, FALSE);
+                }
+                break;
+        }
+    }
+    poppler_page_free_form_field_mapping(mappings);
+    ctx.model.notify_modified();
+}
+
+void record_change(AppContext &ctx, const char *label, const FieldChange &change) {
+    AppContext *c = &ctx;
+    ctx.history.push({label, [c, change] { apply_change(*c, change, true); },
+                      [c, change] { apply_change(*c, change, false); }});
 }
 
 }  // namespace
@@ -63,12 +131,38 @@ bool FormTool::on_press(PageView &view, const PointerEvent &event) {
                 const PopplerFormButtonType type =
                     poppler_form_field_button_get_button_type(field);
                 const gboolean state = poppler_form_field_button_get_state(field);
+                FieldChange change;
+                change.page = ctx_.model.current_page();
+                change.id = poppler_form_field_get_id(field);
                 if (type == POPPLER_FORM_BUTTON_CHECK) {
+                    change.kind = FieldChange::Check;
+                    change.old_state = state;
+                    change.new_state = !state;
                     poppler_form_field_button_set_state(field, !state);
                     ctx_.model.notify_modified();
+                    record_change(ctx_, "Toggle check box", change);
                 } else if (type == POPPLER_FORM_BUTTON_RADIO && !state) {
+                    change.kind = FieldChange::Radio;
+                    // Remember which button of the same group was selected.
+                    const gchar *group = poppler_form_field_get_name(field);
+                    for (GList *o = mappings; group && o; o = o->next) {
+                        auto *other = static_cast<PopplerFormFieldMapping *>(o->data)->field;
+                        if (other == field ||
+                            poppler_form_field_get_field_type(other) != POPPLER_FORM_FIELD_BUTTON ||
+                            poppler_form_field_button_get_button_type(other) !=
+                                POPPLER_FORM_BUTTON_RADIO ||
+                            !poppler_form_field_button_get_state(other)) {
+                            continue;
+                        }
+                        const gchar *name = poppler_form_field_get_name(other);
+                        if (name && g_strcmp0(name, group) == 0) {
+                            change.old_radio_id = poppler_form_field_get_id(other);
+                            break;
+                        }
+                    }
                     poppler_form_field_button_set_state(field, TRUE);
                     ctx_.model.notify_modified();
+                    record_change(ctx_, "Select option", change);
                 }
                 break;
             }
@@ -87,6 +181,8 @@ void FormTool::begin_text_edit(PopplerFormField *field, const PopplerRectangle &
     gchar *current = poppler_form_field_text_get_text(field);
     const std::string value = current ? current : "";
     g_free(current);
+    orig_text_ = value;
+    page_index_ = ctx_.model.current_page();
 
     const bool multiline = poppler_form_field_text_get_text_type(field) ==
                            POPPLER_FORM_TEXT_MULTILINE;
@@ -95,6 +191,7 @@ void FormTool::begin_text_edit(PopplerFormField *field, const PopplerRectangle &
         auto *scroller = Gtk::manage(new Gtk::ScrolledWindow());
         text_view_ = Gtk::manage(new Gtk::TextView());
         text_view_->get_buffer()->set_text(value);
+        TextUndo::attach(*text_view_);
         text_view_->set_wrap_mode(Gtk::WRAP_WORD);
         scroller->add(*text_view_);
         scroller->set_shadow_type(Gtk::SHADOW_IN);
@@ -122,6 +219,7 @@ void FormTool::begin_text_edit(PopplerFormField *field, const PopplerRectangle &
     } else {
         entry_ = Gtk::manage(new Gtk::Entry());
         entry_->set_text(value);
+        TextUndo::attach(*entry_);
         editor_ = entry_;
 
         entry_->signal_activate().connect([this] { finish(true); });
@@ -162,6 +260,8 @@ void FormTool::begin_choice_edit(PopplerFormField *field, const PopplerRectangle
         if (poppler_form_field_choice_is_item_selected(field, i)) selected = i;
     }
     if (selected >= 0) combo_->set_active(selected);
+    orig_choice_ = selected;
+    page_index_ = ctx_.model.current_page();
     editor_ = combo_;
 
     // Picking an item applies it immediately.
@@ -183,17 +283,30 @@ void FormTool::finish(bool keep) {
     bool changed = false;
 
     if (keep) {
-        if (entry_) {
-            poppler_form_field_text_set_text(field, entry_->get_text().c_str());
-            changed = true;
-        } else if (text_view_) {
-            poppler_form_field_text_set_text(
-                field, text_view_->get_buffer()->get_text().c_str());
-            changed = true;
-        } else if (combo_ && chosen_item_ >= 0) {
+        FieldChange change;
+        change.page = page_index_;
+        change.id = poppler_form_field_get_id(field);
+        if (entry_ || text_view_) {
+            const std::string text = entry_ ? std::string(entry_->get_text())
+                                            : std::string(text_view_->get_buffer()->get_text());
+            if (text != orig_text_) {
+                poppler_form_field_text_set_text(field, text.c_str());
+                change.kind = FieldChange::Text;
+                change.old_text = orig_text_;
+                change.new_text = text;
+                changed = true;
+            }
+        } else if (combo_ && chosen_item_ >= 0 && chosen_item_ != orig_choice_) {
             poppler_form_field_choice_unselect_all(field);
             poppler_form_field_choice_select_item(field, chosen_item_);
+            change.kind = FieldChange::Choice;
+            change.old_choice = orig_choice_;
+            change.new_choice = chosen_item_;
             changed = true;
+        }
+        if (changed) {
+            // The field must be alive until the step is recorded.
+            record_change(ctx_, "Fill in field", change);
         }
     }
 

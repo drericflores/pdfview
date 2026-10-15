@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "core/document_model.h"
+#include "core/history.h"
 #include "core/settings.h"
 #include "features/feature.h"
 #include "ui/menu_builder.h"
@@ -41,6 +42,7 @@ private:
     // Declaration order matters: later members use earlier ones.
     Settings settings_;
     DocumentModel model_;
+    History history_;
     Glib::RefPtr<Gtk::AccelGroup> accel_;
     Gtk::Box root_{Gtk::ORIENTATION_VERTICAL};
     Gtk::MenuBar menubar_;

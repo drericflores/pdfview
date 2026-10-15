@@ -12,6 +12,7 @@
 namespace efpdf {
 
 class DocumentModel;
+class History;
 class MenuBuilder;
 class PageView;
 class Settings;
@@ -27,6 +28,7 @@ struct AppContext {
     Gtk::Box &sidebar;   // left panel (e.g. thumbnails)
     Settings &settings;
     ToolRegistry &tools;
+    History &history;     // undo/redo of document edits
 };
 
 class Feature {

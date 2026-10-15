@@ -9,5 +9,6 @@ int main(int argc, char *argv[]) {
     efpdf::MainWindow window;
     if (argc > 1) window.open_file(argv[1]);  // efpdf file.pdf
 
-    return app->run(window);
+    // The file argument was handled above; keep it away from GApplication.
+    return app->run(window, 1, argv);
 }
