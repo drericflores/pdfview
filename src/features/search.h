@@ -1,6 +1,8 @@
 // search.h - Edit > Find (Ctrl+F): search the whole document and highlight hits.
 #pragma once
 
+#include <poppler.h>
+
 #include <string>
 #include <vector>
 

@@ -6,7 +6,8 @@
 
 CXX      := g++
 PKGS     := gtkmm-3.0 poppler-glib libqpdf
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -MMD -MP -Isrc $(shell pkg-config --cflags $(PKGS))
+# -Wno-cpp silences QPDF 11's "POINTERHOLDER_TRANSITION is not defined" #warning.
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -Wno-cpp -MMD -MP -Isrc $(shell pkg-config --cflags $(PKGS))
 LDFLAGS  := $(shell pkg-config --libs $(PKGS))
 
 TARGET := efpdf
