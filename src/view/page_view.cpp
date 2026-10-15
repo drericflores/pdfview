@@ -97,10 +97,20 @@ void PageView::refresh() {
 
     if (dark_) {
         // Invert the finished page: white paper becomes dark, black text light.
-        // cairomm's operator enum lacks the blend modes, so use the C API.
-        cairo_set_operator(cr->cobj(), CAIRO_OPERATOR_DIFFERENCE);
-        cr->set_source_rgb(1.0, 1.0, 1.0);
-        cr->paint();
+        // The page is fully opaque (it was painted on white), so flipping the
+        // colour bytes directly is exact and does not depend on blend modes.
+        surface_->flush();
+        unsigned char *data = surface_->get_data();
+        const int stride = surface_->get_stride();
+        for (int y = 0; y < h; ++y) {
+            unsigned char *row = data + static_cast<size_t>(y) * stride;
+            for (int x = 0; x < w; ++x) {
+                row[x * 4 + 0] = 255 - row[x * 4 + 0];  // blue
+                row[x * 4 + 1] = 255 - row[x * 4 + 1];  // green
+                row[x * 4 + 2] = 255 - row[x * 4 + 2];  // red
+            }
+        }
+        surface_->mark_dirty();
     }
 
     area_.set_size_request(w, h);

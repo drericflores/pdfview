@@ -8,7 +8,6 @@ namespace efpdf {
 
 Search::Search(AppContext &ctx) : ctx_(ctx) {
     bar_.set_border_width(4);
-    bar_.set_no_show_all(true);  // hidden until Ctrl+F
 
     auto *label = Gtk::manage(new Gtk::Label("Find:"));
     auto *prev = Gtk::manage(new Gtk::Button("_Previous", true));
@@ -24,6 +23,13 @@ Search::Search(AppContext &ctx) : ctx_(ctx) {
     bar_.pack_start(status_, Gtk::PACK_SHRINK);
     bar_.pack_end(*close, Gtk::PACK_SHRINK);
     ctx.top_area.pack_start(bar_, Gtk::PACK_SHRINK);
+
+    // Show the children now, then hide the bar and exclude it from the
+    // window's show_all(). (Calling show_all() on a no-show-all widget later
+    // would do nothing, so show_bar() uses plain show().)
+    bar_.show_all();
+    bar_.set_no_show_all(true);
+    bar_.hide();
 
     // Enter searches (or steps to the next hit); Shift+Enter goes backwards.
     entry_.signal_activate().connect([this] {
@@ -54,7 +60,7 @@ Search::Search(AppContext &ctx) : ctx_(ctx) {
 
 void Search::show_bar() {
     if (!ctx_.model.is_open()) return;
-    bar_.show_all();
+    bar_.show();
     entry_.grab_focus();
     entry_.select_region(0, -1);
 }
@@ -128,7 +134,9 @@ void Search::run_search() {
 
 void Search::step(int direction) {
     if (hits_.empty()) {
-        if (bar_.get_visible()) run_search();
+        // F3 with no active search: open the bar, and search if text is waiting.
+        show_bar();
+        if (!entry_.get_text().empty()) run_search();
         return;
     }
     const int n = static_cast<int>(hits_.size());
