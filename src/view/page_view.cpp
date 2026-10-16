@@ -18,7 +18,8 @@ PageView::PageView(DocumentModel &model) : model_(model) {
     overlay_.set_margin_bottom(12);
     area_.set_can_focus(true);
     area_.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
-                     Gdk::BUTTON1_MOTION_MASK | Gdk::SCROLL_MASK);
+                     Gdk::POINTER_MOTION_MASK | Gdk::LEAVE_NOTIFY_MASK |
+                     Gdk::SCROLL_MASK);
     area_.signal_draw().connect(sigc::mem_fun(*this, &PageView::on_area_draw));
     area_.signal_button_press_event().connect(
         sigc::mem_fun(*this, &PageView::on_area_press));
@@ -28,8 +29,23 @@ PageView::PageView(DocumentModel &model) : model_(model) {
         sigc::mem_fun(*this, &PageView::on_area_release));
     area_.signal_scroll_event().connect(
         sigc::mem_fun(*this, &PageView::on_area_scroll));
+    area_.signal_leave_notify_event().connect(
+        sigc::mem_fun(*this, &PageView::on_area_leave));
+    // Moving the window to a screen with a different scale factor (HiDPI)
+    // needs the page re-rendered at the new resolution.
+    area_.property_scale_factor().signal_changed().connect(
+        sigc::mem_fun(*this, &PageView::refresh));
     overlay_.add(area_);
     add(overlay_);
+
+    // Taking keyboard focus must not scroll the page: GTK would otherwise
+    // scroll the focused child into view, which shifts the page up by the
+    // margin around it the first time it is clicked. Point the viewport's
+    // "scroll the focus into view" adjustments at throwaway objects instead.
+    if (auto *viewport = dynamic_cast<Gtk::Viewport *>(get_child())) {
+        viewport->set_focus_hadjustment(Gtk::Adjustment::create(0, 0, 0, 0, 0, 0));
+        viewport->set_focus_vadjustment(Gtk::Adjustment::create(0, 0, 0, 0, 0, 0));
+    }
 
     model_.signal_loaded.connect(sigc::mem_fun(*this, &PageView::refresh));
     model_.signal_closed.connect(sigc::mem_fun(*this, &PageView::refresh));
@@ -75,6 +91,8 @@ void PageView::set_dark(bool dark) {
 void PageView::set_tool(Tool *tool) {
     if (tool_ && tool_ != tool) tool_->deactivate(*this);
     tool_ = tool;
+    set_cursor(nullptr);
+    if (tool_) tool_->activate(*this);
     area_.queue_draw();
 }
 
@@ -93,7 +111,15 @@ void PageView::refresh() {
     const int w = std::max(1, static_cast<int>(std::ceil(page_w_ * scale_)));
     const int h = std::max(1, static_cast<int>(std::ceil(page_h_ * scale_)));
 
-    surface_ = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, w, h);
+    // Render at the screen's real resolution so text stays sharp on HiDPI
+    // displays: the surface has dpr x more pixels, and its device scale tells
+    // cairo that one drawing unit is still one logical pixel.
+    const int dpr = std::max(1, area_.get_scale_factor());
+    const int pw = w * dpr, ph = h * dpr;
+    surface_w_ = w;
+    surface_h_ = h;
+    surface_ = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, pw, ph);
+    cairo_surface_set_device_scale(surface_->cobj(), dpr, dpr);
     auto cr = Cairo::Context::create(surface_);
 
     // Poppler draws onto a transparent canvas, so lay down paper first.
@@ -111,9 +137,9 @@ void PageView::refresh() {
         surface_->flush();
         unsigned char *data = surface_->get_data();
         const int stride = surface_->get_stride();
-        for (int y = 0; y < h; ++y) {
+        for (int y = 0; y < ph; ++y) {
             unsigned char *row = data + static_cast<size_t>(y) * stride;
-            for (int x = 0; x < w; ++x) {
+            for (int x = 0; x < pw; ++x) {
                 row[x * 4 + 0] = 255 - row[x * 4 + 0];  // blue
                 row[x * 4 + 1] = 255 - row[x * 4 + 1];  // green
                 row[x * 4 + 2] = 255 - row[x * 4 + 2];  // red
@@ -183,7 +209,7 @@ bool PageView::on_area_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
     } else {
         cr->set_source_rgba(0.0, 0.0, 0.0, 0.28);
     }
-    cr->rectangle(0.5, 0.5, surface_->get_width() - 1.0, surface_->get_height() - 1.0);
+    cr->rectangle(0.5, 0.5, surface_w_ - 1.0, surface_h_ - 1.0);
     cr->stroke();
     if (tool_) tool_->paint(*this, cr);
     signal_paint_overlay.emit(cr);
@@ -203,7 +229,28 @@ bool PageView::on_area_press(GdkEventButton *event) {
 
 bool PageView::on_area_motion(GdkEventMotion *event) {
     if (!tool_) return false;
-    return tool_->on_motion(*this, make_event(event->x, event->y, 1));
+    const PointerEvent pointer = make_event(event->x, event->y, 1);
+    if (event->state & GDK_BUTTON1_MASK) return tool_->on_motion(*this, pointer);
+    tool_->on_hover(*this, pointer);
+    return false;
+}
+
+bool PageView::on_area_leave(GdkEventCrossing *) {
+    set_cursor(nullptr);
+    return false;
+}
+
+void PageView::set_cursor(const char *name) {
+    const std::string wanted = name ? name : "";
+    if (wanted == cursor_name_) return;
+    cursor_name_ = wanted;
+    auto window = area_.get_window();
+    if (!window) return;
+    if (name) {
+        window->set_cursor(Gdk::Cursor::create(area_.get_display(), name));
+    } else {
+        window->set_cursor(Glib::RefPtr<Gdk::Cursor>());
+    }
 }
 
 bool PageView::on_area_release(GdkEventButton *event) {

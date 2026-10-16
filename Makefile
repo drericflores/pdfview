@@ -121,6 +121,32 @@ build/test_util: tests/test_util.cpp src/core/util.cpp
 	@mkdir -p build
 	$(CXX) $(TEST_FLAGS) $(GLIB_CFLAGS) $^ -o $@ $(GLIB_LIBS)
 
+# Structural-operation tests: rotate, delete, move, merge, extract and split are
+# run on a fixture PDF and the results are read back with Poppler. Needs
+# poppler-glib and libqpdf (the same packages the program itself needs).
+OPS_PKGS := poppler-glib libqpdf
+
+check-ops: build/test_pdf_ops
+	./build/test_pdf_ops
+
+build/test_pdf_ops: tests/test_pdf_ops.cpp src/core/pdf_ops.cpp src/core/page_ranges.cpp
+	@mkdir -p build
+	$(CXX) $(TEST_FLAGS) -Wno-cpp -DFIXTURE_DIR='"tests/fixtures"' $^ -o $@ \
+	  $(shell pkg-config --cflags --libs $(OPS_PKGS))
+
+# Drag-to-text selection (used by Select, Highlight and Underline), checked on a
+# fixture with text at known positions. Needs poppler-glib.
+check-text: build/test_text_select
+	./build/test_text_select
+
+build/test_text_select: tests/test_text_select.cpp src/core/text_select.cpp
+	@mkdir -p build
+	$(CXX) $(TEST_FLAGS) -DFIXTURE_DIR='"tests/fixtures"' $^ -o $@ \
+	  $(shell pkg-config --cflags --libs poppler-glib)
+
+# Everything: the library-free tests plus the structural-operation and text tests.
+test: check check-ops check-text
+
 -include $(DEP)
 
-.PHONY: all clean run install uninstall check check-install FORCE
+.PHONY: all clean run install uninstall check check-ops check-text test check-install FORCE

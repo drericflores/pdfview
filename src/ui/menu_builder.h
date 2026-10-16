@@ -29,6 +29,11 @@ public:
                                        Gdk::ModifierType mods = Gdk::ModifierType(0));
     void add_separator(const std::string &menu);
 
+    // Like add_item(), but inserts at `position` (0 = first) instead of appending.
+    Gtk::MenuItem *insert_item(const std::string &menu, int position, const char *label,
+                               const sigc::slot<void> &slot, guint key = 0,
+                               Gdk::ModifierType mods = Gdk::ModifierType(0));
+
     // Inserts a submenu entry at `position` (0 = first) and returns the submenu.
     Gtk::Menu &insert_submenu(const std::string &menu, const char *label,
                               int position);

@@ -44,6 +44,16 @@ Gtk::MenuItem *MenuBuilder::add_item(const std::string &menu_name, const char *l
     return item;
 }
 
+Gtk::MenuItem *MenuBuilder::insert_item(const std::string &menu_name, int position,
+                                        const char *label, const sigc::slot<void> &slot,
+                                        guint key, Gdk::ModifierType mods) {
+    auto *item = Gtk::manage(new Gtk::MenuItem(label, true));
+    item->signal_activate().connect(slot);
+    set_accelerator(*item, key, mods);
+    menu(menu_name).insert(*item, position);
+    return item;
+}
+
 Gtk::CheckMenuItem *MenuBuilder::add_check_item(const std::string &menu_name,
                                                 const char *label,
                                                 const sigc::slot<void> &on_toggled,

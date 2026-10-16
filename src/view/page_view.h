@@ -9,6 +9,8 @@
 #include <gtkmm.h>
 #include <sigc++/sigc++.h>
 
+#include <string>
+
 #include "core/document_model.h"
 #include "view/tool.h"
 
@@ -44,6 +46,10 @@ public:
 
     Gtk::DrawingArea &area() { return area_; }
 
+    // Sets the mouse cursor over the page by name ("pointer", "text", ...);
+    // nullptr restores the default arrow.
+    void set_cursor(const char *name);
+
     // Widgets added with overlay().add_overlay() float above the page. Use
     // place_over_pdf_rect() to line one up with a rectangle in PDF points
     // (for example, a form field being edited in place).
@@ -56,6 +62,17 @@ public:
     sigc::signal<void, const Glib::ustring &> signal_message;
     // Right mouse button; used by the annotation eraser.
     sigc::signal<void, const PointerEvent &> signal_secondary_click;
+    // Emitted by the Select tool before it starts selecting text, so a feature
+    // that owns something clickable (form fields) can take the click first by
+    // setting event.handled.
+    sigc::signal<void, PointerEvent &> signal_probe_click;
+
+    // Copy: a feature that has a text selection appends it to the string.
+    sigc::signal<void, std::string &> signal_collect_selection;
+
+    // Edit > Select All, when no text box has the keyboard focus.
+    sigc::signal<void> signal_select_all;
+
     // Lets features draw over the page (search highlights, for example).
     sigc::signal<void, const Cairo::RefPtr<Cairo::Context> &> signal_paint_overlay;
 
@@ -65,6 +82,7 @@ private:
     bool on_area_motion(GdkEventMotion *event);
     bool on_area_release(GdkEventButton *event);
     bool on_area_scroll(GdkEventScroll *event);
+    bool on_area_leave(GdkEventCrossing *event);
     PointerEvent make_event(double x, double y, guint button) const;
     bool measure();
 
@@ -76,6 +94,8 @@ private:
     double scale_ = 1.0;
     double page_w_ = 0, page_h_ = 0;  // current page size in points
     bool dark_ = false;
+    int surface_w_ = 0, surface_h_ = 0;  // page size in logical pixels
+    std::string cursor_name_;
 };
 
 }  // namespace efpdf

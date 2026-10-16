@@ -23,7 +23,7 @@ Plan revised: 14 October 2026
 | Structure | Modular: one header + source file per feature under `src/features/`; a thin window shell; GTK-free `core/` layer |
 | Working location | Your computer at `/home/eric/development/cpp/efpdf/` (not linked to this chat; work is delivered through the GitHub repository `drericflores/efpdf`) |
 
-## Phase 0 — Port and foundation (written, not yet compiled)
+## Phase 0 — Port and foundation (compiled and verified)
 
 Status: **code written; never compiled** because the sandbox could not install
 GTKmm, Poppler or QPDF development packages.
@@ -84,6 +84,9 @@ Known risks to check first:
 - [x] Recent files list (stored in `~/.config/efpdf/`) (written, unverified)
 - [x] Remember window size, zoom and dark mode between runs (written, unverified)
 - [ ] Continuous scrolling through pages (optional, larger change)
+- [x] Select tool: text selection, copy, Ctrl+A, clickable links (verified under Xvfb)
+- [x] Highlight/underline snap to text lines; HiDPI rendering; Print (Ctrl+P)
+- [ ] Add `resources/efpdf2.png` (referenced by README and Makefile but missing from the repo)
 
 ## Phase 4 — Editing polish
 
@@ -104,7 +107,7 @@ Known risks to check first:
 ## Phase 5 — Quality and release
 
 - [x] Unit tests for the library-free core (`make check`: page ranges, utilities)
-- [ ] Automated tests for `pdf_ops` (page counts and order after each operation) using small fixture PDFs
+- [x] Automated tests for `pdf_ops` and `text_select` using fixture PDFs (`make test`)
 - [ ] CI build on Ubuntu LTS with all three libraries
 - [ ] Packaging: `.deb`, and optionally Flatpak or AppImage
 - [ ] Tag `v1.0` once Phases 1–3 pass on a clean machine

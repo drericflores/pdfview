@@ -336,6 +336,14 @@ void FormTool::release_editor() {
     }
 }
 
-Forms::Forms(AppContext &ctx) { ctx.tools.emplace<FormTool>(ctx); }
+Forms::Forms(AppContext &ctx) {
+    FormTool &tool = ctx.tools.emplace<FormTool>(ctx);
+    // The default Select tool offers each click here first, so form fields can
+    // be filled without switching tools. (FormTool::on_press also commits any
+    // field being edited when the click lands elsewhere.)
+    ctx.view.signal_probe_click.connect([&tool, &ctx](PointerEvent &event) {
+        if (!event.handled && tool.on_press(ctx.view, event)) event.handled = true;
+    });
+}
 
 }  // namespace efpdf

@@ -19,6 +19,10 @@ This project is coded for educational purposes.
   thumbnail sidebar that fills in lazily
 - Zoom in/out, actual size, fit width and fit page (Ctrl+mouse wheel also zooms)
 - Text search across the whole document with highlighted matches (Ctrl+F)
+- Select tool (the default): drag across text and press Ctrl+C to copy, Ctrl+A to select the
+  page's text, click a link to follow it (page jumps, web and mail addresses only)
+- Highlight and underline follow the text line by line instead of covering a box
+- Print (Ctrl+P) and sharp rendering on HiDPI screens
 - Recent files list, drag-and-drop to open, and remembered window size, zoom
   level and dark mode
 - A colored, modern look: light menu bar with an accent line, icon toolbar, accent-colored
@@ -69,6 +73,8 @@ src/
     file_commands.*          open / save / save as / close / quit / drag-and-drop
     recent_files.*           File > Open Recent
     navigation.*             previous/next, page-jump box, page shortcuts
+    select.*                 Select tool: text selection, copy, links
+    print.*                  File > Print
     thumbnails.*             thumbnail sidebar
     zoom.*                   zoom, fit width, fit page
     dark_mode.*              dark mode (the page and the GTK dark setting)
@@ -124,6 +130,13 @@ and GLib):
 make check
 ```
 
+The PDF operations and text selection are covered by tests that read results
+back with Poppler (needs poppler-glib and libqpdf; `qpdf` for the encrypted case):
+
+```bash
+make test        # check + check-ops + check-text
+```
+
 To install system-wide (default prefix `/usr/local`):
 
 ```bash
@@ -163,9 +176,11 @@ with `EFPDF_PLAIN=1 ./efpdf`.
 | Ctrl+1 / Ctrl+2 | Fit width / fit page |
 | Ctrl+Plus / Ctrl+Minus / Ctrl+0 | Zoom in / zoom out / actual size |
 | Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) | Undo / redo |
-| Ctrl+X / Ctrl+C / Ctrl+V | Cut / copy / paste (inside a form field or the search box) |
+| Ctrl+X / Ctrl+C / Ctrl+V | Cut / copy / paste (form fields, search box; Ctrl+C also copies selected page text) |
 | Ctrl+L / Ctrl+R | Rotate page left / right |
 | Ctrl+Alt+Up / Ctrl+Alt+Down | Move page up / down |
+| Ctrl+A | Select all text on the page (Select tool) |
+| Ctrl+P | Print |
 | Ctrl+D | Toggle dark mode |
 
 ## Using the editing tools
@@ -238,7 +253,7 @@ THE SOFTWARE.
 ## Contributing
 
 Contributions are welcome. Ideas that would fit well: text search, fit-to-width
-zoom, a recent-files list, undo/redo for edits, printing and packaging.
+zoom, continuous scrolling and packaging.
 Please keep changes modular, use RAII for resource management, and make sure the
 project builds cleanly with `-Wall -Wextra` before opening a pull request.
 Bug reports and feature requests can be filed on the repository's issues page.

@@ -11,8 +11,10 @@
 #include "features/navigation.h"
 #include "features/page_ops.h"
 #include "features/preferences.h"
+#include "features/print.h"
 #include "features/recent_files.h"
 #include "features/search.h"
+#include "features/select.h"
 #include "features/thumbnails.h"
 #include "features/tool_selector.h"
 #include "features/zoom.h"
@@ -39,10 +41,12 @@ MainWindow::MainWindow()
     files_ = files.get();
     features_.push_back(std::move(files));
     features_.push_back(std::make_unique<RecentFiles>(ctx_, *files_));
+    features_.push_back(std::make_unique<Print>(ctx_));         // File > Print
     features_.push_back(std::make_unique<Navigation>(ctx_));
     features_.push_back(std::make_unique<Zoom>(ctx_));
     features_.push_back(std::make_unique<Search>(ctx_));
-    features_.push_back(std::make_unique<Forms>(ctx_));        // registers the default tool
+    features_.push_back(std::make_unique<Select>(ctx_));       // registers the default tool
+    features_.push_back(std::make_unique<Forms>(ctx_));
     features_.push_back(std::make_unique<Annotations>(ctx_));
     features_.push_back(std::make_unique<EditCommands>(ctx_));  // top of the Edit menu
     auto page_ops = std::make_unique<PageOps>(ctx_);

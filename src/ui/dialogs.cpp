@@ -29,6 +29,8 @@ void note_folder_used(const std::string &file) {
 void set_folder_hooks(FolderHooks hooks) { g_hooks = std::move(hooks); }
 
 void show_error(Gtk::Window &parent, const Glib::ustring &message) {
+    // Also log it, so a problem is still visible after the dialog is dismissed.
+    g_warning("efpdf: %s", message.c_str());
     Gtk::MessageDialog dlg(parent, message, false, Gtk::MESSAGE_ERROR,
                            Gtk::BUTTONS_OK, true);
     dlg.run();
