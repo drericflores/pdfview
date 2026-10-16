@@ -19,6 +19,7 @@ private:
     void cut();
     void copy();
     void paste();
+    void select_all();
     void say(const Glib::ustring &message);
 
     AppContext &ctx_;

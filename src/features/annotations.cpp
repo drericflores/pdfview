@@ -6,6 +6,7 @@
 
 #include "core/document_model.h"
 #include "core/settings.h"
+#include "core/text_select.h"
 #include "ui/dialogs.h"
 #include "view/page_view.h"
 #include "view/tool_registry.h"
@@ -73,7 +74,8 @@ bool MarkupTool::on_release(PageView &view, const PointerEvent &event) {
     dragging_ = false;
     x1_ = event.x;
     y1_ = event.y;
-    if (std::abs(x1_ - x0_) > 3 && std::abs(y1_ - y0_) > 3) {
+    // A drag along one line of text is nearly horizontal, so only its length counts.
+    if (std::hypot(x1_ - x0_, y1_ - y0_) > 3) {
         add_annotation(view);
     } else {
         view.signal_message.emit("Nothing marked: press, drag across the text, then release.");
@@ -99,19 +101,49 @@ void MarkupTool::add_annotation(PageView &view) {
     PagePtr page = ctx_.model.current_page_object();
     if (!page) return;
 
-    double ax, ay, bx, by;
-    view.to_pdf(x0_, y0_, ax, ay);
-    view.to_pdf(x1_, y1_, bx, by);
-    PopplerRectangle rect{std::min(ax, bx), std::min(ay, by), std::max(ax, bx),
-                          std::max(ay, by)};
+    // Follow the text: one quadrilateral per selected line, so the highlight
+    // hugs the words. On a page with no text under the drag (a scan, a picture)
+    // fall back to the dragged rectangle itself.
+    double page_w = 0, page_h = 0;
+    poppler_page_get_size(page.get(), &page_w, &page_h);
+    const double s = view.scale();
+    const text_select::Selection snapped =
+        text_select::select(page.get(), x0_ / s, y0_ / s, x1_ / s, y1_ / s);
 
     GArray *quads = g_array_new(FALSE, TRUE, sizeof(PopplerQuadrilateral));
-    PopplerQuadrilateral quad;
-    quad.p1 = PopplerPoint{rect.x1, rect.y2};  // top-left
-    quad.p2 = PopplerPoint{rect.x2, rect.y2};  // top-right
-    quad.p3 = PopplerPoint{rect.x1, rect.y1};  // bottom-left
-    quad.p4 = PopplerPoint{rect.x2, rect.y1};  // bottom-right
-    g_array_append_val(quads, quad);
+    PopplerRectangle rect{0, 0, 0, 0};
+    auto add_quad = [&](double left, double bottom, double right, double top) {
+        PopplerQuadrilateral quad;
+        quad.p1 = PopplerPoint{left, top};      // top-left
+        quad.p2 = PopplerPoint{right, top};     // top-right
+        quad.p3 = PopplerPoint{left, bottom};   // bottom-left
+        quad.p4 = PopplerPoint{right, bottom};  // bottom-right
+        g_array_append_val(quads, quad);
+        if (quads->len == 1) {
+            rect = PopplerRectangle{left, bottom, right, top};
+        } else {
+            rect.x1 = std::min(rect.x1, left);
+            rect.y1 = std::min(rect.y1, bottom);
+            rect.x2 = std::max(rect.x2, right);
+            rect.y2 = std::max(rect.y2, top);
+        }
+    };
+    if (!snapped.empty()) {
+        // The selection is measured from the top of the page; annotations from the bottom.
+        for (const PopplerRectangle &line : snapped.lines) {
+            add_quad(line.x1, page_h - line.y2, line.x2, page_h - line.y1);
+        }
+    } else {
+        double ax, ay, bx, by;
+        view.to_pdf(x0_, y0_, ax, ay);
+        view.to_pdf(x1_, y1_, bx, by);
+        if (std::abs(ax - bx) < 2 || std::abs(ay - by) < 2) {
+            g_array_free(quads, TRUE);
+            view.signal_message.emit("No text there: drag across some text, or drag a larger area.");
+            return;
+        }
+        add_quad(std::min(ax, bx), std::min(ay, by), std::max(ax, bx), std::max(ay, by));
+    }
 
     PopplerAnnot *annot =
         underline_

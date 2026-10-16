@@ -19,6 +19,7 @@ EditCommands::EditCommands(AppContext &ctx) : ctx_(ctx) {
     menus.add_item("_Edit", "Cu_t", [this] { cut(); }, GDK_KEY_x, ctrl);
     menus.add_item("_Edit", "_Copy", [this] { copy(); }, GDK_KEY_c, ctrl);
     menus.add_item("_Edit", "_Paste", [this] { paste(); }, GDK_KEY_v, ctrl);
+    menus.add_item("_Edit", "Select _All", [this] { select_all(); }, GDK_KEY_a, ctrl);
     menus.add_separator("_Edit");
 
     // Ctrl+Y is the other common spelling of Redo.
@@ -86,7 +87,26 @@ void EditCommands::copy() {
     } else if (auto *view = dynamic_cast<Gtk::TextView *>(focus)) {
         view->get_buffer()->copy_clipboard(Gtk::Clipboard::get());
     } else {
-        say("Copy works inside a text field: click a form field with the Fill forms tool first.");
+        // Nothing being typed in: copy the text selected on the page, if any.
+        std::string text;
+        ctx_.view.signal_collect_selection.emit(text);
+        if (text.empty()) {
+            say("Nothing to copy: drag across text with the Select tool first.");
+            return;
+        }
+        Gtk::Clipboard::get()->set_text(text);
+        say("Copied " + std::to_string(Glib::ustring(text).size()) + " characters.");
+    }
+}
+
+void EditCommands::select_all() {
+    Gtk::Widget *focus = ctx_.window.get_focus();
+    if (auto *editable = dynamic_cast<Gtk::Editable *>(focus)) {
+        editable->select_region(0, -1);
+    } else if (auto *view = dynamic_cast<Gtk::TextView *>(focus)) {
+        view->get_buffer()->select_range(view->get_buffer()->begin(), view->get_buffer()->end());
+    } else {
+        ctx_.view.signal_select_all.emit();
     }
 }
 
